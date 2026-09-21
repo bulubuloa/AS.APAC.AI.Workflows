@@ -9,7 +9,7 @@ STAMP="$(date +%Y%m%d%H%M%S)"
 
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn\033[0m %s\n' "$*"; }
-backup() { [ -e "$1" ] && [ ! -L "$1" ] && cp -a "$1" "$1.bak-$STAMP" && warn "backed up $1 → $1.bak-$STAMP" || true; }
+backup() { [ -e "$1" ] && [ ! -L "$1" ] && ! cmp -s "$1" "${2:-/dev/null}" && cp -a "$1" "$1.bak-$STAMP" && warn "backed up $1 → $1.bak-$STAMP" || true; }  # $2 = incoming file: no backup when identical
 
 # Claude Code keys project memory by the absolute path of the folder, with '/' replaced by '-'.
 slug() { printf '%s' "$1" | sed 's#/#-#g'; }
@@ -19,23 +19,27 @@ say "workspace: $WS"
 
 # 1. Global preferences
 mkdir -p "$CLAUDE_HOME"
-backup "$CLAUDE_HOME/CLAUDE.md"; cp "$KIT/claude/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"; say "installed ~/.claude/CLAUDE.md"
+backup "$CLAUDE_HOME/CLAUDE.md" "$KIT/claude/CLAUDE.md"; cp "$KIT/claude/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"; say "installed ~/.claude/CLAUDE.md"
 
 # 2. Workspace-level instructions, commands and permissions
 mkdir -p "$WS/.claude/commands"
 # task files live in the kit (issues/) so work in progress can be picked up by anyone; the workspace gets a symlink
 if [ -d "$WS/issues" ] && [ ! -L "$WS/issues" ]; then for f in "$WS/issues"/*; do [ -e "$KIT/issues/$(basename "$f")" ] || cp -R "$f" "$KIT/issues/"; done; mv "$WS/issues" "$WS/issues.bak-$STAMP"; warn "moved existing issues/ into the kit"; fi
 [ -L "$WS/issues" ] || ln -s "$KIT/issues" "$WS/issues"
-backup "$WS/CLAUDE.md"; cp "$KIT/workspace/CLAUDE.md" "$WS/CLAUDE.md"
+backup "$WS/CLAUDE.md" "$KIT/workspace/CLAUDE.md"; cp "$KIT/workspace/CLAUDE.md" "$WS/CLAUDE.md"
 for c in "$KIT"/claude/commands/*.md; do cp "$c" "$WS/.claude/commands/"; done
-backup "$WS/.claude/settings.json"; cp "$KIT/claude/settings.json" "$WS/.claude/settings.json"
+backup "$WS/.claude/settings.json" "$KIT/claude/settings.json"; cp "$KIT/claude/settings.json" "$WS/.claude/settings.json"
 say "installed workspace CLAUDE.md, $(ls "$KIT"/claude/commands | wc -l | tr -d ' ') commands, settings.json"
 
 # 3. Per-repo instructions (only for repos that are checked out)
 for r in "$KIT"/workspace/repos/*/; do
   name="$(basename "$r")"
   for dir in "$WS/Omnicasa.Mobile.$name" "$WS/Omnicasa.Mobile.$name.Clone"; do
-    if [ -d "$dir" ]; then backup "$dir/CLAUDE.md"; cp "$r/CLAUDE.md" "$dir/CLAUDE.md"; say "installed $dir/CLAUDE.md"; fi
+    if [ -d "$dir" ]; then
+      backup "$dir/CLAUDE.md" "$r/CLAUDE.md"; cp "$r/CLAUDE.md" "$dir/CLAUDE.md"; say "installed $dir/CLAUDE.md"
+      # keep the instruction files out of the product repos' commits without touching their .gitignore
+      if [ -d "$dir/.git" ]; then for f in CLAUDE.md AGENTS.md "*.bak-*"; do grep -qx "$f" "$dir/.git/info/exclude" 2>/dev/null || echo "$f" >> "$dir/.git/info/exclude"; done; fi
+    fi
   done
 done
 
@@ -58,6 +62,30 @@ link_memory "$WS" OmnicasaAS
 
 # 5. MCP servers (user scope; harmless if already present)
 if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "claude CLI not found — install Claude Code, then run claude/mcp.sh"; fi
+
+# 5b. Codex CLI (OpenAI) — same content, its file names: AGENTS.md, ~/.codex/prompts, config.toml
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ]; then
+  mkdir -p "$CODEX_HOME/prompts"
+  backup "$CODEX_HOME/AGENTS.md"; sed 's/Co-Authored-By: Claude/Co-Authored-By: Codex/' "$KIT/claude/CLAUDE.md" > "$CODEX_HOME/AGENTS.md"
+  for c in "$KIT"/codex/prompts/*.md; do cp "$c" "$CODEX_HOME/prompts/"; done
+  # Codex reads AGENTS.md from the git root down to cwd; the workspace folder is not a repo, so each repo's
+  # AGENTS.md carries the workspace map + the Codex memory preamble + the repo's own instructions.
+  backup "$WS/AGENTS.md"; cat "$KIT/codex/AGENTS.preamble.md" "$KIT/workspace/CLAUDE.md" > "$WS/AGENTS.md"
+  for r in "$KIT"/workspace/repos/*/; do
+    name="$(basename "$r")"
+    for dir in "$WS/Omnicasa.Mobile.$name" "$WS/Omnicasa.Mobile.$name.Clone"; do
+      [ -d "$dir" ] || continue
+      backup "$dir/AGENTS.md"; { cat "$KIT/codex/AGENTS.preamble.md"; echo "# Workspace map (from ai-workspace/workspace/CLAUDE.md)"; echo; cat "$KIT/workspace/CLAUDE.md"; echo; echo "---"; echo; cat "$r/CLAUDE.md"; } > "$dir/AGENTS.md"
+    done
+  done
+  # config.toml: append the snippet sections that are not there yet; trust the workspace project
+  cfg="$CODEX_HOME/config.toml"; touch "$cfg"; backup "$cfg"
+  grep -q '\[mcp_servers.atlassian-isos\]' "$cfg" || printf '\n[mcp_servers.atlassian-isos]\nurl = "https://mcp.atlassian.com/v1/mcp"\n' >> "$cfg"
+  grep -q '\[mcp_servers.playwright\]' "$cfg" || printf '\n[mcp_servers.playwright]\ntype = "stdio"\ncommand = "npx"\nargs = ["-y", "@playwright/mcp@latest"]\n' >> "$cfg"
+  grep -q "\[projects.\"$WS\"\]" "$cfg" || printf '\n[projects."%s"]\ntrust_level = "trusted"\n' "$WS" >> "$cfg"
+  say "codex: AGENTS.md (global, workspace, repos), 2 prompts, MCP servers in config.toml — run: codex mcp login atlassian-isos"
+fi
 
 # 6. Secret guard for this repo
 if [ -d "$KIT/.git" ]; then

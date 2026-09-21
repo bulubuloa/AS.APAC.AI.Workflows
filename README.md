@@ -13,7 +13,8 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | Path | What | Where it ends up on your machine |
 |---|---|---|
 | `claude/CLAUDE.md` | Global working preferences (comment style, commit format, no AI trailers) | `~/.claude/CLAUDE.md` |
-| `claude/commands/*.md` | Slash commands: `/task-fetch` (Jira → task file), `/task-analyse` (read-only analysis) | `<workspace>/.claude/commands/` |
+| `claude/commands/*.md` | Slash commands for the whole loop: `/task-fetch` (Jira → task file), `/task-analyse` (read-only analysis), `/task-implement` (branch from the right base, code, build, tests, commits), `/task-verify` (evidence: browser, DB, logs), `/task-deliver` (PR text, QA comment, release notes, memory), `/task-run` (all of them, with pauses / `--cowork` / `--auto`) | `<workspace>/.claude/commands/` |
+| `codex/` | The same for OpenAI Codex CLI: `config.snippet.toml` (MCP servers, sandbox), `prompts/` (`/prompts:task-*`), `AGENTS.preamble.md` (how Codex reads/writes the shared memory) | `~/.codex/`, `AGENTS.md` next to each `CLAUDE.md` |
 | `claude/settings.json` | Permission allow/deny rules: reads silent, writes prompted | `<workspace>/.claude/settings.json` |
 | `claude/mcp.sh` | The MCP servers to register (Atlassian, Playwright) | `claude mcp add …` (user scope) |
 | `workspace/CLAUDE.md` | Workspace instructions: repo map, branch → environment, environments, access, conventions, where the docs are | `<workspace>/CLAUDE.md` |
@@ -49,7 +50,11 @@ aws sso login     # or configure the ap-southeast-1 profile you were given
 ./ai-workspace/doctor.sh
 ```
 
-Then, in any repo: `claude` → `/task-fetch ABE-xxxx` → review `issues/ABE-xxxx.md` → `/task-analyse issues/ABE-xxxx.md`.
+Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
+
+## Codex CLI instead of Claude Code
+
+`bootstrap.sh` installs the Codex equivalents when `~/.codex` exists (or `WITH_CODEX=1`): `~/.codex/AGENTS.md` (global preferences), an `AGENTS.md` in the workspace and in each repo (workspace map + the Codex memory preamble + the repo instructions, because Codex reads `AGENTS.md` from the git root, not from parent folders), the six prompts in `~/.codex/prompts/`, and the MCP servers + trusted project in `~/.codex/config.toml`. Then `codex mcp login atlassian-isos`. Codex has no automatic project memory, so its `AGENTS.md` tells it to read `ai-workspace/memory/*/MEMORY.md` at the start of a session and to write notes at the end — the notes are the same files either agent uses. Permissions are coarser than Claude's allow-list: `sandbox_mode = "workspace-write"`, `approval_policy = "on-request"`, network on.
 
 ## Keeping it current — the one rule
 

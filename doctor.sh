@@ -20,6 +20,13 @@ echo "claude config"
 for p in "$WS" "$WS/Omnicasa.Mobile.ABCB" "$WS/Omnicasa.Mobile.ABMB"; do s="$HOME/.claude/projects/$(printf '%s' "$p" | sed 's#/#-#g')/memory"; [ -L "$s" ] && ok "memory linked: $(basename "$p") → $(readlink "$s" | sed "s#$KIT/##")" || bad "memory not linked for $p"; done
 have claude && { claude mcp list 2>/dev/null | grep -q "atlassian-isos" && ok "MCP atlassian-isos registered (authenticate with /mcp inside claude)" || bad "MCP atlassian-isos (run claude/mcp.sh)"; claude mcp list 2>/dev/null | grep -q playwright && ok "MCP playwright" || bad "MCP playwright"; }
 
+echo "codex (optional)"
+if [ -d "$HOME/.codex" ]; then
+  [ -f "$HOME/.codex/AGENTS.md" ] && ok "~/.codex/AGENTS.md" || bad "~/.codex/AGENTS.md"
+  [ -f "$WS/AGENTS.md" ] && ok "workspace AGENTS.md" || bad "workspace AGENTS.md"
+  [ -f "$HOME/.codex/prompts/task-fetch.md" ] && ok "/prompts:task-fetch" || bad "codex prompt task-fetch"
+  grep -q 'mcp_servers.atlassian-isos' "$HOME/.codex/config.toml" 2>/dev/null && ok "codex MCP atlassian-isos in config.toml (login: codex mcp login atlassian-isos)" || bad "codex MCP atlassian-isos"
+else ok "codex not installed — skipped"; fi
 echo "access"
 aws sts get-caller-identity --query Account --output text 2>/dev/null | grep -q 739075353953 && ok "AWS account 739075353953" || bad "AWS credentials (aws sso login / profile) — expected account 739075353953"
 aws secretsmanager describe-secret --secret-id benefit-connection-string-preprod >/dev/null 2>&1 && ok "can read secret benefit-connection-string-preprod" || bad "secret benefit-connection-string-preprod not readable"

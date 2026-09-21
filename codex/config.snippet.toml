@@ -1,0 +1,19 @@
+# ai-workspace — Codex CLI settings to merge into ~/.codex/config.toml (bootstrap.sh appends the parts that are missing)
+
+# Jira + Confluence (ISOS tenant) — HTTP MCP with OAuth: after adding, run `codex mcp login atlassian-isos`
+[mcp_servers.atlassian-isos]
+url = "https://mcp.atlassian.com/v1/mcp"
+
+# Real browser for verification on SIT/UAT
+[mcp_servers.playwright]
+type = "stdio"
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+
+# Sandbox + approvals: the agent may edit files in the workspace and reach the network (MCP, aws, tunnels);
+# anything outside the workspace, and every command the sandbox cannot run, is prompted.
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+[sandbox_workspace_write]
+network_access = true
