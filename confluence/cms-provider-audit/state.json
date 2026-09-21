@@ -1,0 +1,407 @@
+{
+ "pages": {
+  "00a-manager-summary.md": "6838779959",
+  "01-dispatch-auto-mode.md": "6838878233",
+  "02-job-screens.md": "6838190336",
+  "03-provider-management.md": "6838812751",
+  "04-provider-mobile-app.md": "6838681651",
+  "05-reports.md": "6838878254",
+  "06-background-and-sync.md": "6838878275",
+  "07-architecture-changes.md": "6838452255",
+  "08-complications.md": "6838779979",
+  "09-rollout-plan.md": "6837862639",
+  "10-numbers-and-evidence.md": "6837862659",
+  "features/": "6838190357",
+  "features/F01-provider-search-box.md": "6838648886",
+  "features/F02-nearest-technicians.md": "6838681672",
+  "features/F03-job-save-provider-name.md": "6838223058",
+  "features/F04-benefit-check.md": "6838779999",
+  "features/F05-job-detail-page.md": "6838223079",
+  "features/F06-live-monitor-board.md": "6838747181",
+  "features/F07-job-action-and-message-lists.md": "6838321238",
+  "features/F08-customer-tracking-link.md": "6838485027",
+  "features/F09-map-markers.md": "6838485048",
+  "features/F10-provider-list.md": "6838910996",
+  "features/F11-provider-detail-page.md": "6837895490",
+  "features/F12-provider-review-and-grades.md": "6838353966",
+  "features/F13-vehicle-health-and-summary.md": "6838878296",
+  "features/F14-direct-provider-edit.md": "6838550562",
+  "features/F15-provider-login.md": "6838190378",
+  "features/F16-lockout-deactivated-provider.md": "6837666155",
+  "features/F17-app-vehicles-gps-jobs.md": "6838550583",
+  "features/F18-job-reports.md": "6838714378",
+  "features/F19-job-detail-export.md": "6837862680",
+  "features/F20-lost-signal-alerts.md": "6838911017",
+  "features/F21-benefit-to-roadside-sync.md": "6838223100",
+  "features/F22-delete-and-unpublish.md": "6838714399",
+  "features/F23-environments.md": "6838517805",
+  "00-README.md": "6838452246"
+ },
+ "media": {
+  "07-architecture-changes.md#0": {
+   "fileId": "f967e73d-56ab-4b33-a35a-4eb3ce2744b4",
+   "collection": "contentId-6838452255",
+   "title": "07-architecture-changes.md_0.png"
+  },
+  "07-architecture-changes.md#1": {
+   "fileId": "56e13360-bab9-46a4-a4bb-d7b85cef3f80",
+   "collection": "contentId-6838452255",
+   "title": "07-architecture-changes.md_1.png"
+  },
+  "07-architecture-changes.md#2": {
+   "fileId": "8c95af8d-e669-4b73-bda6-55d3ec21c889",
+   "collection": "contentId-6838452255",
+   "title": "07-architecture-changes.md_2.png"
+  },
+  "features/F01-provider-search-box.md#0": {
+   "fileId": "2cf78822-92d3-477e-8235-71cc6c6dd8f7",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_0.png"
+  },
+  "features/F01-provider-search-box.md#1": {
+   "fileId": "0fd8b284-e5e7-4eaa-ae2e-b31292ec327e",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_1.png"
+  },
+  "features/F01-provider-search-box.md#2": {
+   "fileId": "6a7ea794-2692-4ea2-bc84-2e08286758ef",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_2.png"
+  },
+  "features/F01-provider-search-box.md#3": {
+   "fileId": "bc4a0a81-3214-4970-be97-3104d5b707dc",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_3.png"
+  },
+  "features/F01-provider-search-box.md#4": {
+   "fileId": "1b32062c-20dc-44ad-ade0-534ba7755dd4",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_4.png"
+  },
+  "features/F01-provider-search-box.md#5": {
+   "fileId": "59019498-d3ca-4bad-90e4-db18002c5d02",
+   "collection": "contentId-6838648886",
+   "title": "features__F01-provider-search-box.md_5.png"
+  },
+  "features/F02-nearest-technicians.md#0": {
+   "fileId": "4bb35ee1-1124-48c9-8e6f-5994a6418c81",
+   "collection": "contentId-6838681672",
+   "title": "features__F02-nearest-technicians.md_0.png"
+  },
+  "features/F02-nearest-technicians.md#1": {
+   "fileId": "f0996c48-e249-495e-80cf-df1b1f1ca5fb",
+   "collection": "contentId-6838681672",
+   "title": "features__F02-nearest-technicians.md_1.png"
+  },
+  "features/F02-nearest-technicians.md#2": {
+   "fileId": "447a4860-e821-4a12-b958-c6e0afd40a78",
+   "collection": "contentId-6838681672",
+   "title": "features__F02-nearest-technicians.md_2.png"
+  },
+  "features/F02-nearest-technicians.md#3": {
+   "fileId": "15ecefd7-f746-4ecd-8b28-f7a2204d0d13",
+   "collection": "contentId-6838681672",
+   "title": "features__F02-nearest-technicians.md_3.png"
+  },
+  "features/F03-job-save-provider-name.md#0": {
+   "fileId": "e2781f0f-16c0-401b-bf00-f497d8627d39",
+   "collection": "contentId-6838223058",
+   "title": "features__F03-job-save-provider-name.md_0.png"
+  },
+  "features/F03-job-save-provider-name.md#1": {
+   "fileId": "cac41736-9bce-49fb-8181-e4877530b1b2",
+   "collection": "contentId-6838223058",
+   "title": "features__F03-job-save-provider-name.md_1.png"
+  },
+  "features/F03-job-save-provider-name.md#2": {
+   "fileId": "e7b5621c-4d3d-489a-b097-d1f8b64fab73",
+   "collection": "contentId-6838223058",
+   "title": "features__F03-job-save-provider-name.md_2.png"
+  },
+  "features/F03-job-save-provider-name.md#3": {
+   "fileId": "d352b91c-1086-485e-ad73-996a8f945614",
+   "collection": "contentId-6838223058",
+   "title": "features__F03-job-save-provider-name.md_3.png"
+  },
+  "features/F04-benefit-check.md#0": {
+   "fileId": "2d9b3130-9b9e-4769-a918-2d39332139d6",
+   "collection": "contentId-6838779999",
+   "title": "features__F04-benefit-check.md_0.png"
+  },
+  "features/F04-benefit-check.md#1": {
+   "fileId": "10d8ee81-159f-46ed-90d7-40c0def00aec",
+   "collection": "contentId-6838779999",
+   "title": "features__F04-benefit-check.md_1.png"
+  },
+  "features/F04-benefit-check.md#2": {
+   "fileId": "42a1ebcf-7529-41f1-ad5a-07f68a12de61",
+   "collection": "contentId-6838779999",
+   "title": "features__F04-benefit-check.md_2.png"
+  },
+  "features/F04-benefit-check.md#3": {
+   "fileId": "ba7e6734-3361-4bca-9341-02c511b83ff9",
+   "collection": "contentId-6838779999",
+   "title": "features__F04-benefit-check.md_3.png"
+  },
+  "features/F05-job-detail-page.md#0": {
+   "fileId": "b0bb838b-63ec-4995-957d-7d60cafa4ef9",
+   "collection": "contentId-6838223079",
+   "title": "features__F05-job-detail-page.md_0.png"
+  },
+  "features/F05-job-detail-page.md#1": {
+   "fileId": "d8207599-b78e-481d-9156-b7d2e19a2740",
+   "collection": "contentId-6838223079",
+   "title": "features__F05-job-detail-page.md_1.png"
+  },
+  "features/F05-job-detail-page.md#2": {
+   "fileId": "9451a9b2-4128-4595-9fbf-03d3d8355f5b",
+   "collection": "contentId-6838223079",
+   "title": "features__F05-job-detail-page.md_2.png"
+  },
+  "features/F06-live-monitor-board.md#0": {
+   "fileId": "8cffe64d-e461-4b32-87b1-61811c94d2f0",
+   "collection": "contentId-6838747181",
+   "title": "features__F06-live-monitor-board.md_0.png"
+  },
+  "features/F06-live-monitor-board.md#1": {
+   "fileId": "66318ca0-ff4f-4dc6-bac2-49107722eb3c",
+   "collection": "contentId-6838747181",
+   "title": "features__F06-live-monitor-board.md_1.png"
+  },
+  "features/F06-live-monitor-board.md#2": {
+   "fileId": "cf11270b-3787-45b5-9d1c-ea03c3446913",
+   "collection": "contentId-6838747181",
+   "title": "features__F06-live-monitor-board.md_2.png"
+  },
+  "features/F06-live-monitor-board.md#3": {
+   "fileId": "7d94a3c9-1487-4402-90fe-f0f00b5a6b51",
+   "collection": "contentId-6838747181",
+   "title": "features__F06-live-monitor-board.md_3.png"
+  },
+  "features/F07-job-action-and-message-lists.md#0": {
+   "fileId": "1e2527c0-6b3c-484f-959a-5a074603dd3c",
+   "collection": "contentId-6838321238",
+   "title": "features__F07-job-action-and-message-lists.md_0.png"
+  },
+  "features/F07-job-action-and-message-lists.md#1": {
+   "fileId": "a4375bfd-90d5-40f2-953b-8afbdfdb10a5",
+   "collection": "contentId-6838321238",
+   "title": "features__F07-job-action-and-message-lists.md_1.png"
+  },
+  "features/F08-customer-tracking-link.md#0": {
+   "fileId": "b26f9b11-693b-45df-aa24-8ed1c4cb61d9",
+   "collection": "contentId-6838485027",
+   "title": "features__F08-customer-tracking-link.md_0.png"
+  },
+  "features/F08-customer-tracking-link.md#1": {
+   "fileId": "1dce91a2-21c3-4261-b9ef-f18fd3fb8ad5",
+   "collection": "contentId-6838485027",
+   "title": "features__F08-customer-tracking-link.md_1.png"
+  },
+  "features/F08-customer-tracking-link.md#2": {
+   "fileId": "bb7fc07d-68b2-4bba-8989-cc7db69512c0",
+   "collection": "contentId-6838485027",
+   "title": "features__F08-customer-tracking-link.md_2.png"
+  },
+  "features/F08-customer-tracking-link.md#3": {
+   "fileId": "7675acc3-5bea-484c-8f0e-49f6cba21cb4",
+   "collection": "contentId-6838485027",
+   "title": "features__F08-customer-tracking-link.md_3.png"
+  },
+  "features/F09-map-markers.md#0": {
+   "fileId": "17f16420-3318-4c0f-a6e5-32539e95c04a",
+   "collection": "contentId-6838485048",
+   "title": "features__F09-map-markers.md_0.png"
+  },
+  "features/F09-map-markers.md#1": {
+   "fileId": "119eb6a1-244f-4015-b2ad-de48d3edf534",
+   "collection": "contentId-6838485048",
+   "title": "features__F09-map-markers.md_1.png"
+  },
+  "features/F09-map-markers.md#2": {
+   "fileId": "80697f5b-5c95-4884-8054-256f0cb7fb79",
+   "collection": "contentId-6838485048",
+   "title": "features__F09-map-markers.md_2.png"
+  },
+  "features/F10-provider-list.md#0": {
+   "fileId": "d1b188a0-1365-41f2-9835-e16ec5050b4e",
+   "collection": "contentId-6838910996",
+   "title": "features__F10-provider-list.md_0.png"
+  },
+  "features/F10-provider-list.md#1": {
+   "fileId": "a1a9a5b2-214b-4978-9abd-319b49254065",
+   "collection": "contentId-6838910996",
+   "title": "features__F10-provider-list.md_1.png"
+  },
+  "features/F10-provider-list.md#2": {
+   "fileId": "7f8792ac-32ab-4161-b6f9-736ae234f1fc",
+   "collection": "contentId-6838910996",
+   "title": "features__F10-provider-list.md_2.png"
+  },
+  "features/F11-provider-detail-page.md#0": {
+   "fileId": "1e398ee6-76f3-4121-b02d-32465d3c680f",
+   "collection": "contentId-6837895490",
+   "title": "features__F11-provider-detail-page.md_0.png"
+  },
+  "features/F12-provider-review-and-grades.md#0": {
+   "fileId": "b6605628-a5da-49d7-b8c2-8236fa4022d9",
+   "collection": "contentId-6838353966",
+   "title": "features__F12-provider-review-and-grades.md_0.png"
+  },
+  "features/F12-provider-review-and-grades.md#1": {
+   "fileId": "885661bf-789e-42ca-a90b-76e1a2edfd87",
+   "collection": "contentId-6838353966",
+   "title": "features__F12-provider-review-and-grades.md_1.png"
+  },
+  "features/F13-vehicle-health-and-summary.md#0": {
+   "fileId": "1f63122e-62a0-4cf6-bc83-ae599a3db9f2",
+   "collection": "contentId-6838878296",
+   "title": "features__F13-vehicle-health-and-summary.md_0.png"
+  },
+  "features/F14-direct-provider-edit.md#0": {
+   "fileId": "f21ba263-02c3-4b40-acc7-f0140b6ab41b",
+   "collection": "contentId-6838550562",
+   "title": "features__F14-direct-provider-edit.md_0.png"
+  },
+  "features/F14-direct-provider-edit.md#1": {
+   "fileId": "ed000642-8e82-40f7-8bb2-b90b02f5f518",
+   "collection": "contentId-6838550562",
+   "title": "features__F14-direct-provider-edit.md_1.png"
+  },
+  "features/F15-provider-login.md#0": {
+   "fileId": "8a5d4f8e-a9fb-4e91-935c-d6c180f63424",
+   "collection": "contentId-6838190378",
+   "title": "features__F15-provider-login.md_0.png"
+  },
+  "features/F15-provider-login.md#1": {
+   "fileId": "805360c7-46a1-4676-88ae-b4df3d68ceb5",
+   "collection": "contentId-6838190378",
+   "title": "features__F15-provider-login.md_1.png"
+  },
+  "features/F15-provider-login.md#2": {
+   "fileId": "02f893f3-fd80-4425-8bf8-db2e51d0acc4",
+   "collection": "contentId-6838190378",
+   "title": "features__F15-provider-login.md_2.png"
+  },
+  "features/F16-lockout-deactivated-provider.md#0": {
+   "fileId": "a41df38b-a9ff-4d3e-a91f-b143c41983a2",
+   "collection": "contentId-6837666155",
+   "title": "features__F16-lockout-deactivated-provider.md_0.png"
+  },
+  "features/F16-lockout-deactivated-provider.md#1": {
+   "fileId": "f3835cf6-ca33-4a8b-96a4-c6dffbfce49c",
+   "collection": "contentId-6837666155",
+   "title": "features__F16-lockout-deactivated-provider.md_1.png"
+  },
+  "features/F16-lockout-deactivated-provider.md#2": {
+   "fileId": "ccd5c565-a2b3-4b0f-9d8f-1dc4b3edc257",
+   "collection": "contentId-6837666155",
+   "title": "features__F16-lockout-deactivated-provider.md_2.png"
+  },
+  "features/F16-lockout-deactivated-provider.md#3": {
+   "fileId": "32297da4-86c9-430e-8f1b-49fae933423e",
+   "collection": "contentId-6837666155",
+   "title": "features__F16-lockout-deactivated-provider.md_3.png"
+  },
+  "features/F17-app-vehicles-gps-jobs.md#0": {
+   "fileId": "e3650228-7c6a-4558-92c6-2d8abd83d121",
+   "collection": "contentId-6838550583",
+   "title": "features__F17-app-vehicles-gps-jobs.md_0.png"
+  },
+  "features/F18-job-reports.md#0": {
+   "fileId": "d062b30c-105f-490f-9918-fdf68bff9eed",
+   "collection": "contentId-6838714378",
+   "title": "features__F18-job-reports.md_0.png"
+  },
+  "features/F18-job-reports.md#1": {
+   "fileId": "d4f37027-f897-4462-a7da-68426436e8e5",
+   "collection": "contentId-6838714378",
+   "title": "features__F18-job-reports.md_1.png"
+  },
+  "features/F18-job-reports.md#2": {
+   "fileId": "6287aeb3-68bd-419c-93a6-82d9d98c9025",
+   "collection": "contentId-6838714378",
+   "title": "features__F18-job-reports.md_2.png"
+  },
+  "features/F18-job-reports.md#3": {
+   "fileId": "61e6f405-f1fc-47be-88dc-93ffc4fab2d0",
+   "collection": "contentId-6838714378",
+   "title": "features__F18-job-reports.md_3.png"
+  },
+  "features/F19-job-detail-export.md#0": {
+   "fileId": "236f15b9-34e6-4b98-afdc-0fd9df181e6d",
+   "collection": "contentId-6837862680",
+   "title": "features__F19-job-detail-export.md_0.png"
+  },
+  "features/F20-lost-signal-alerts.md#0": {
+   "fileId": "233a0da4-3a4f-4398-8636-a18be0d357d3",
+   "collection": "contentId-6838911017",
+   "title": "features__F20-lost-signal-alerts.md_0.png"
+  },
+  "features/F20-lost-signal-alerts.md#1": {
+   "fileId": "329f5534-cff2-4440-86d5-6d91a9fb2603",
+   "collection": "contentId-6838911017",
+   "title": "features__F20-lost-signal-alerts.md_1.png"
+  },
+  "features/F20-lost-signal-alerts.md#2": {
+   "fileId": "8bd64fdd-6dd5-4331-9311-505e82626a0b",
+   "collection": "contentId-6838911017",
+   "title": "features__F20-lost-signal-alerts.md_2.png"
+  },
+  "features/F21-benefit-to-roadside-sync.md#0": {
+   "fileId": "9e81fa8c-0c9c-48a3-aeb0-303ea58fdfcf",
+   "collection": "contentId-6838223100",
+   "title": "features__F21-benefit-to-roadside-sync.md_0.png"
+  },
+  "features/F21-benefit-to-roadside-sync.md#1": {
+   "fileId": "7813b516-c627-4af6-a42a-34cf233a3e90",
+   "collection": "contentId-6838223100",
+   "title": "features__F21-benefit-to-roadside-sync.md_1.png"
+  },
+  "features/F21-benefit-to-roadside-sync.md#2": {
+   "fileId": "12a2709c-7256-4a8e-af36-4db9c54280e9",
+   "collection": "contentId-6838223100",
+   "title": "features__F21-benefit-to-roadside-sync.md_2.png"
+  },
+  "features/F21-benefit-to-roadside-sync.md#3": {
+   "fileId": "2de8c324-4576-4291-b6ee-331bf56acc2b",
+   "collection": "contentId-6838223100",
+   "title": "features__F21-benefit-to-roadside-sync.md_3.png"
+  },
+  "features/F22-delete-and-unpublish.md#0": {
+   "fileId": "58a335d2-f9d0-4cf9-ad75-43e358dbc531",
+   "collection": "contentId-6838714399",
+   "title": "features__F22-delete-and-unpublish.md_0.png"
+  },
+  "features/F22-delete-and-unpublish.md#1": {
+   "fileId": "a45ad04a-d4f3-4f1e-b594-0e989fcc8a38",
+   "collection": "contentId-6838714399",
+   "title": "features__F22-delete-and-unpublish.md_1.png"
+  },
+  "features/F22-delete-and-unpublish.md#2": {
+   "fileId": "2f53ad17-5e3c-49a4-ad8f-b397afe0f931",
+   "collection": "contentId-6838714399",
+   "title": "features__F22-delete-and-unpublish.md_2.png"
+  },
+  "features/F23-environments.md#0": {
+   "fileId": "2b4785e1-c2cb-4476-b1f8-63b459b1181e",
+   "collection": "contentId-6838517805",
+   "title": "features__F23-environments.md_0.png"
+  },
+  "features/F23-environments.md#1": {
+   "fileId": "c112c15f-1fb4-45b2-b7a1-fae9b183865e",
+   "collection": "contentId-6838517805",
+   "title": "features__F23-environments.md_1.png"
+  },
+  "features/F23-environments.md#2": {
+   "fileId": "7bdaa7a1-1d62-4dd8-a84d-8a8e398bc12f",
+   "collection": "contentId-6838517805",
+   "title": "features__F23-environments.md_2.png"
+  },
+  "features/F23-environments.md#3": {
+   "fileId": "4e8e59e9-8cbb-4da9-9ecf-e59bd88d3376",
+   "collection": "contentId-6838517805",
+   "title": "features__F23-environments.md_3.png"
+  }
+ }
+}
