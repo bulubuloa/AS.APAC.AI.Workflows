@@ -5,7 +5,7 @@ the way we work on them, in one versioned place, so that any developer can take 
 the projects and the agent starts with the same knowledge, commands, permissions and access
 recipes — not with an empty memory.
 
-Nothing in this repository is a secret. Credentials live in AWS Secrets Manager / SSM and in
+Nothing in this repository is a secret, but `issues/` and `memory/` contain internal business detail (client codes, counts, incident notes) — keep the repository private to the team. Credentials live in AWS Secrets Manager / SSM and in
 each developer's own OAuth logins; this repo only says *where* they are.
 
 ## What is in here
@@ -20,6 +20,7 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `workspace/repos/<REPO>/CLAUDE.md` | Per-repo instructions (ABCB, ABMB, ABF, ABVB) | `<workspace>/<repo dir>/CLAUDE.md` |
 | `memory/<name>/*.md` | The agent's project memory — every non-obvious fact learned on these projects (env ids, drifted SPs, pipeline quirks, incidents) | symlinked into `~/.claude/projects/<slug>/memory` |
 | `access/ACCESS.md` | Access recipes: which tunnel port is which database, which secret holds which connection string, AWS account, CMS environments, mail rules | read by the agent via `workspace/CLAUDE.md` |
+| `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
 | `bootstrap.sh` / `doctor.sh` | Install into a fresh machine / verify the setup | — |
 

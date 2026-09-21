@@ -22,7 +22,10 @@ mkdir -p "$CLAUDE_HOME"
 backup "$CLAUDE_HOME/CLAUDE.md"; cp "$KIT/claude/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"; say "installed ~/.claude/CLAUDE.md"
 
 # 2. Workspace-level instructions, commands and permissions
-mkdir -p "$WS/.claude/commands" "$WS/issues"
+mkdir -p "$WS/.claude/commands"
+# task files live in the kit (issues/) so work in progress can be picked up by anyone; the workspace gets a symlink
+if [ -d "$WS/issues" ] && [ ! -L "$WS/issues" ]; then for f in "$WS/issues"/*; do [ -e "$KIT/issues/$(basename "$f")" ] || cp -R "$f" "$KIT/issues/"; done; mv "$WS/issues" "$WS/issues.bak-$STAMP"; warn "moved existing issues/ into the kit"; fi
+[ -L "$WS/issues" ] || ln -s "$KIT/issues" "$WS/issues"
 backup "$WS/CLAUDE.md"; cp "$KIT/workspace/CLAUDE.md" "$WS/CLAUDE.md"
 for c in "$KIT"/claude/commands/*.md; do cp "$c" "$WS/.claude/commands/"; done
 backup "$WS/.claude/settings.json"; cp "$KIT/claude/settings.json" "$WS/.claude/settings.json"
@@ -58,12 +61,7 @@ if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "clau
 
 # 6. Secret guard for this repo
 if [ -d "$KIT/.git" ]; then
-  cat > "$KIT/.git/hooks/pre-commit" <<'EOF'
-#!/usr/bin/env bash
-# refuse commits that look like they contain credentials
-if git diff --cached -U0 | grep -E '^\+' | grep -vE '^\+\+\+' | grep -qE 'ATATT3|AKIA[0-9A-Z]{12}|eyJ[A-Za-z0-9_-]{30,}|(-p|pwd=|password[=: ]+)[A-Za-z0-9@#$%^&*_+=/.!-]{8,}'; then
-  echo "pre-commit: something in the staged diff looks like a credential. Point at the secret's name instead."; exit 1; fi
-EOF
+  printf '#!/usr/bin/env bash\ngit diff --cached -U0 -- . ":(exclude)claude/secret-guard.pl" | perl "$(git rev-parse --show-toplevel)/claude/secret-guard.pl" || { echo "pre-commit: staged diff looks like it contains a credential — point at the secret name instead"; exit 1; }\n' > "$KIT/.git/hooks/pre-commit"
   chmod +x "$KIT/.git/hooks/pre-commit"; say "installed secret guard (pre-commit)"
 fi
 
