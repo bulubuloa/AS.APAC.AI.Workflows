@@ -21,14 +21,14 @@
 <tr><td><p><code>bootstrap.sh</code> / <code>doctor.sh</code></p></td><td><p>Install (idempotent, backs up what it replaces, merges local notes) / verify</p></td><td><p>—</p></td></tr>
 </tbody></table>
 
-<h2>3. Take over in 15 minutes</h2>
+<h2>3. Take over in 15 minutes</h2><p>Full step-by-step with prerequisites, accounts to request, tunnel ports and troubleshooting: <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837862577">Setup guide — new machine, step by step</a>. Repository: <a href="https://github.com/bulubuloa/AS.APAC.AI.Workflows">github.com/bulubuloa/AS.APAC.AI.Workflows</a>.</p>
 <pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
 git clone …/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
 git clone …/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB
 git clone …/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
 git clone …/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB          # data-processer-* branches
 git clone …/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone    # develop (ClientService.API)
-git clone …/ai-workspace.git                        ai-workspace
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
 ./ai-workspace/bootstrap.sh      # instructions, commands, settings, memory links, MCP servers, secret guard
 claude                           # /mcp → atlassian-isos → Authenticate

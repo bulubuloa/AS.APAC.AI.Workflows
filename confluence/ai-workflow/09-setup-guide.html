@@ -1,0 +1,104 @@
+<p>Step-by-step companion to <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6838812674">Part 0 — the ai-workspace kit</a>. Follow it top to bottom on a new Mac; about 30 minutes including downloads. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p>Kit repository: <a href="https://github.com/bulubuloa/AS.APAC.AI.Workflows">github.com/bulubuloa/AS.APAC.AI.Workflows</a> (private — ask for access). Everything below is also in its <code>README.md</code>; this page adds the prerequisites, the accounts to request, and what to do when a check fails.</p></div>
+
+<h2>1. Accounts and access to request first</h2>
+<table data-width="760"><thead><tr><th><p>What</p></th><th><p>From whom</p></th><th><p>Used for</p></th></tr></thead><tbody>
+<tr><td><p>Atlassian account on <code>internationalsos.atlassian.net</code> with ABE project + AD space</p></td><td><p>ISOS IT / team lead</p></td><td><p>Jira tickets, Confluence pages (MCP + twg)</p></td></tr>
+<tr><td><p>Bitbucket access to <code>internationalsos/apac-*</code> repos + an app password</p></td><td><p>Team lead</p></td><td><p>Clone, push, PRs</p></td></tr>
+<tr><td><p>AWS access to account <code>739075353953</code> (ap-southeast-1), read on Secrets Manager / SSM / Batch / EventBridge / S3 / CloudWatch</p></td><td><p>Infra (Linh Phan)</p></td><td><p>Connection strings, pipelines, data-processor infra</p></td></tr>
+<tr><td><p>VPN + SSH bastion key for the RDS tunnels</p></td><td><p>Infra</p></td><td><p>Databases (ports below)</p></td></tr>
+<tr><td><p>Claude Code seat (Anthropic Team/Enterprise)</p></td><td><p>Team lead</p></td><td><p>The agent</p></td></tr>
+<tr><td><p>GitHub access to the kit repo</p></td><td><p>Hoang</p></td><td><p>Instructions, memory, task files</p></td></tr>
+</tbody></table>
+
+<h2>2. Install the tools</h2>
+<pre><code class="language-bash"># Homebrew first (https://brew.sh), then:
+brew install git awscli node python@3.12 mysql-client
+brew install sqlcmd                       # MSSQL client (RSA databases)
+pip3 install pymysql pgpy boto3           # the agent's DB / PGP helpers
+# .NET SDK 8 (ClientService.API, ABF) — https://dotnet.microsoft.com/download ; ABMB (RoadSide) builds on Windows CodeBuild, not locally
+npm install -g @anthropic-ai/claude-code  # Claude Code CLI, v2.1+
+# twg (Atlassian CLI): installer from the Atlassian TWG page → lands in ~/.local/bin/twg ; add to PATH</code></pre>
+<p>Check: <code>claude --version</code>, <code>twg --version</code>, <code>aws --version</code>, <code>dotnet --version</code>, <code>/opt/homebrew/opt/mysql-client/bin/mysql --version</code>, <code>sqlcmd --version</code>.</p>
+
+<h2>3. Clone the workspace (folder names matter)</h2>
+<pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
+git clone https://bitbucket.org/internationalsos/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
+git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB
+git clone https://bitbucket.org/internationalsos/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
+git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB
+git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git                         ai-workspace
+
+cd Omnicasa.Mobile.ABCB       &amp;&amp; git checkout data-processer-pre-production &amp;&amp; cd ..   # data processors
+cd Omnicasa.Mobile.ABCB.Clone &amp;&amp; git checkout develop                       &amp;&amp; cd ..   # ClientService.API
+cd Omnicasa.Mobile.ABVB &amp;&amp; git checkout develop &amp;&amp; cd ..
+cd Omnicasa.Mobile.ABF  &amp;&amp; git checkout develop &amp;&amp; cd ..
+cd Omnicasa.Mobile.ABMB &amp;&amp; git checkout roadside-release-uat &amp;&amp; cd ..</code></pre>
+<p>The client-backend repo is huge; the first clone takes a while. The two checkouts of it are deliberate: the data-processor branches strip the API projects and vice-versa.</p>
+
+<h2>4. Install the kit</h2>
+<pre><code class="language-bash">./ai-workspace/bootstrap.sh</code></pre>
+<p>What it does, so nothing is a surprise: copies the global <code>~/.claude/CLAUDE.md</code>; puts <code>CLAUDE.md</code>, <code>.claude/commands/</code> and <code>.claude/settings.json</code> in the workspace; a <code>CLAUDE.md</code> in each repo; <strong>symlinks</strong> <code>~/.claude/projects/&lt;slug&gt;/memory</code> for the workspace, ABCB, ABCB.Clone and ABMB into <code>ai-workspace/memory/</code> (existing local notes are merged in, the old folder is kept as <code>memory.bak-…</code>); symlinks <code>issues/</code>; registers the MCP servers; installs the secret guard as a pre-commit hook. Re-running it is safe.</p>
+
+<h2>5. Authenticate</h2>
+<ol>
+<li><p><strong>Claude Code:</strong> <code>claude</code> in the workspace → sign in with the company account when prompted → <code>/mcp</code> → <code>atlassian-isos</code> → <em>Authenticate</em> → approve for the <strong>internationalsos</strong> site. The server shows <em>connected</em>. Playwright needs no login (downloads Chromium on first use).</p></li>
+<li><p><strong>twg:</strong> run <code>twg confluence space get AD</code> — the first call opens the Atlassian OAuth page; approve for the same site.</p></li>
+<li><p><strong>AWS:</strong> <code>aws configure</code> (or SSO) for <code>ap-southeast-1</code>; <code>aws sts get-caller-identity</code> must print account <code>739075353953</code>.</p></li>
+<li><p><strong>Bitbucket:</strong> create an app password (repo read/write), let the first <code>git push</code> store it in the macOS keychain. The agent's shell will usually still be refused — you push, it prepares.</p></li>
+<li><p><strong>Confluence attachments (only if you will publish diagrams):</strong> personal API token from <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com</a>, saved with <code>pbpaste &gt; ~/.config/atlassian/token; chmod 600 ~/.config/atlassian/token</code>.</p></li>
+</ol>
+
+<h2>6. Open the database tunnels</h2>
+<p>The RDS endpoints are VPN-gated. Use the bastion and key infra gave you; the <strong>local ports are a shared convention</strong> — the memory notes and scripts assume them.</p>
+<table data-width="760"><thead><tr><th><p>Local port</p></th><th><p>Target</p></th><th><p>Schemas</p></th><th><p>Credentials (name of the secret)</p></th></tr></thead><tbody>
+<tr><td><p>3375</p></td><td><p>Aurora MySQL cluster <code>benefit-sit</code></p></td><td><p><code>Aspire</code> = SIT, <code>AspireProdBackup</code> = UAT</p></td><td><p><code>benefit-connection-string-preprod</code> → <code>connectionStringBenefitUat</code></p></td></tr>
+<tr><td><p>3382</p></td><td><p>Aurora MySQL <code>benefit-prod</code> — SELECT only</p></td><td><p><code>Aspire</code></p></td><td><p>same secret → <code>connectionStringBenefitProduction</code></p></td></tr>
+<tr><td><p>3383</p></td><td><p>MSSQL <code>rsa-prod</code></p></td><td><p><code>BKKRsa</code></p></td><td><p><code>roadside-connection-string</code></p></td></tr>
+</tbody></table>
+<pre><code class="language-bash"># shape of the command (host/key from infra):
+ssh -N -i ~/.ssh/&lt;key&gt; -L 3375:benefit-sit.cluster-&lt;id&gt;.ap-southeast-1.rds.amazonaws.com:3306 &lt;user&gt;@&lt;bastion&gt;</code></pre>
+<p>Never write a password into a file, a prompt or a chat: the agent reads the secret with <code>aws secretsmanager get-secret-value</code> into memory and connects from there.</p>
+
+<h2>7. Verify</h2>
+<pre><code class="language-bash">./ai-workspace/doctor.sh</code></pre>
+<p>Every line should read <code>OK</code>. What a <code>MISS</code> means:</p>
+<table data-width="760"><thead><tr><th><p>Line</p></th><th><p>Fix</p></th></tr></thead><tbody>
+<tr><td><p>a tool</p></td><td><p>§2 — install it and make sure it is on PATH for a non-login shell</p></td></tr>
+<tr><td><p>a repo</p></td><td><p>§3 — folder name or location differs; the agent finds repos by these names</p></td></tr>
+<tr><td><p>memory not linked</p></td><td><p>re-run <code>bootstrap.sh</code>; if you cloned to a different path, that is fine — the slug is computed from the real path</p></td></tr>
+<tr><td><p>MCP not registered</p></td><td><p><code>bash ai-workspace/claude/mcp.sh</code>, then <code>/mcp</code> inside claude to authenticate</p></td></tr>
+<tr><td><p>AWS account</p></td><td><p>wrong profile — <code>export AWS_PROFILE=…</code> or <code>aws sso login</code></p></td></tr>
+<tr><td><p>secret not readable</p></td><td><p>IAM permission missing — ask infra for read on <code>benefit-connection-string-preprod</code> and <code>roadside-connection-string</code></p></td></tr>
+<tr><td><p>tunnel not listening</p></td><td><p>§6 — open it; <code>lsof -nP -iTCP:3375 -sTCP:LISTEN</code> shows it</p></td></tr>
+<tr><td><p>twg not authenticated</p></td><td><p>run any twg read command and complete the OAuth page</p></td></tr>
+</tbody></table>
+
+<h2>8. First ticket — prove the loop works</h2>
+<pre><code class="language-bash">cd ~/Projects/OmnicasaAS
+claude
+&gt; /task-fetch ABE-xxxx            # writes issues/ABE-xxxx.md — read it, correct the Goal if needed
+&gt; /task-analyse issues/ABE-xxxx.md  # read-only analysis appended to the file
+&gt; (review, then) implement it on a feature branch cut from develop</code></pre>
+<p>What to expect on the first run: the agent reads the workspace and repo <code>CLAUDE.md</code>, the memory index, and asks for permission on anything outside the allow list (comments, pushes, SQL writes). If it asks for something that is clearly read-only and repetitive, add it to <code>.claude/settings.local.json</code> — that file is yours and stays out of the kit.</p>
+
+<h2>9. When you finish a ticket</h2>
+<ol>
+<li><p>Ask the agent: <em>"save what you learned to memory"</em> — new or corrected notes appear under <code>ai-workspace/memory/</code>.</p></li>
+<li><p><code>cd ai-workspace &amp;&amp; git add -A &amp;&amp; git commit -m "ABE-xxxx notes" &amp;&amp; git push</code> — the pre-commit guard blocks anything that looks like a credential.</p></li>
+<li><p>The task file in <code>issues/</code> travels with it; the next person (or agent) starts from the file, not from zero.</p></li>
+</ol>
+
+<h2>10. Troubleshooting the usual suspects</h2>
+<ul>
+<li><p><strong>"Access denied: write_confluence"</strong> from the MCP — expected; the agent uses <code>twg</code> for Confluence writes. Jira comments through the MCP do work.</p></li>
+<li><p><strong>Empty diagram boxes on Confluence</strong> — the Mermaid/draw.io apps only render macros created in their editor; the kit's generators attach PNGs instead (<code>confluence/data-processors/README.md</code>).</p></li>
+<li><p><strong>"Authentication failed for bitbucket.org"</strong> from the agent — expected; run the push yourself with <code>! git push …</code> in the prompt.</p></li>
+<li><p><strong>Long commands wrap in the prompt and split</strong> — keep one-liners short or put them in a script the agent writes for you.</p></li>
+<li><p><strong>Auto-mode classifier refuses an action</strong> (secret-store writes, IAM, prod PII copies) — by design; the agent hands you the script.</p></li>
+<li><p><strong>Preprod jobs fail on MySQL connect</strong> — the preprod Aurora cluster is stopped; develop and test on SIT/UAT.</p></li>
+</ul>
+
+<p>Back to <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6838812674">Part 0</a> · <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837665931">Overview</a>.</p>
