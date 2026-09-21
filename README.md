@@ -34,7 +34,7 @@ git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git
 git clone https://bitbucket.org/internationalsos/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
 git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB          # data-processer-* branches
 git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone    # develop (ClientService.API)
-git clone <this repo> ai-workspace
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
 # 2. Install the kit (idempotent; backs up anything it replaces)
 ./ai-workspace/bootstrap.sh
