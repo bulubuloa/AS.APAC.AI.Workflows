@@ -1,0 +1,66 @@
+<p>Part 0 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> a new developer clones the product repos and one small repo — <code>ai-workspace</code> — runs one script, authenticates three things, and their agent starts with the same instructions, commands, permissions, access recipes and <strong>memory</strong> as the person who worked on the projects before. Nothing lives only on one laptop any more.</p></div>
+
+<h2>1. The problem this solves</h2>
+<p>Until now the "setup" was spread across one machine: a global <code>~/.claude/CLAUDE.md</code>, slash commands in two places, a 528-rule local allowlist, MCP registrations in <code>~/.claude.json</code>, and — the part that actually makes the agent fast — about 50 memory notes under <code>~/.claude/projects/&lt;path&gt;/memory/</code> holding environment ids, drifted stored procedures, pipeline quirks and incident notes. The Sprint 70 example shows what those notes are worth (48 minutes instead of a day). They were not shared with anyone, not versioned, and one of them contained a database password.</p>
+
+<h2>2. What the kit is</h2>
+<p>A private git repository, <code>ai-workspace</code>, checked out next to the product repos. Everything an agent needs, nothing secret:</p>
+<table data-width="760"><thead><tr><th><p>Path</p></th><th><p>Content</p></th><th><p>Installed to</p></th></tr></thead><tbody>
+<tr><td><p><code>claude/CLAUDE.md</code></p></td><td><p>Global working preferences: one-line comments that say why, <code>ABE-xxxx Imperative summary</code> commits, no AI trailers</p></td><td><p><code>~/.claude/CLAUDE.md</code></p></td></tr>
+<tr><td><p><code>claude/commands/</code></p></td><td><p><code>/task-fetch</code> (Jira → task file) and <code>/task-analyse</code> (read-only analysis) — the commands from Parts 2 and 3</p></td><td><p><code>&lt;workspace&gt;/.claude/commands/</code></p></td></tr>
+<tr><td><p><code>claude/settings.json</code></p></td><td><p>78 allow rules (Jira/Confluence reads, browser snapshots, git reads, builds, AWS read-only, DB clients, tunnels, twg reads) and 8 deny rules (force-push, deletes). Everything else — comments, pushes, job-def registrations, SQL writes — is prompted</p></td><td><p><code>&lt;workspace&gt;/.claude/settings.json</code></p></td></tr>
+<tr><td><p><code>claude/mcp.sh</code></p></td><td><p>Registers <code>atlassian-isos</code> and <code>playwright</code> at user scope</p></td><td><p><code>claude mcp add</code></p></td></tr>
+<tr><td><p><code>workspace/CLAUDE.md</code></p></td><td><p>The map: the six repo folders and what each is, <strong>branch → environment per repo</strong> (verified from the pipelines), environments and databases, how we work, what the agent never does alone, the gotchas, where the docs are</p></td><td><p><code>&lt;workspace&gt;/CLAUDE.md</code></p></td></tr>
+<tr><td><p><code>workspace/repos/&lt;REPO&gt;/CLAUDE.md</code></p></td><td><p>Per-repo instructions for ABCB (both products in one repo), ABMB, ABF, ABVB</p></td><td><p>each repo folder</p></td></tr>
+<tr><td><p><code>memory/</code></p></td><td><p>The agent's memory notes for the workspace, ABCB and ABMB (≈50 notes), in the agent's own format</p></td><td><p>symlinked into <code>~/.claude/projects/&lt;slug&gt;/memory</code> — so what the agent writes is what gets committed</p></td></tr>
+<tr><td><p><code>issues/</code></p></td><td><p>Task files per ticket and runbooks — work in progress anyone can pick up</p></td><td><p>symlinked as <code>&lt;workspace&gt;/issues</code></p></td></tr>
+<tr><td><p><code>access/ACCESS.md</code></p></td><td><p>Recipes: tunnel port → database → secret name; SSM parameter names; Kontent environment ids; SES rule set; Atlassian access paths. Names only</p></td><td><p>referenced from the workspace CLAUDE.md</p></td></tr>
+<tr><td><p><code>confluence/</code></p></td><td><p>Generators for the Data Processors client pages and the sources of this series</p></td><td><p>run on change</p></td></tr>
+<tr><td><p><code>bootstrap.sh</code> / <code>doctor.sh</code></p></td><td><p>Install (idempotent, backs up what it replaces, merges local notes) / verify</p></td><td><p>—</p></td></tr>
+</tbody></table>
+
+<h2>3. Take over in 15 minutes</h2>
+<pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
+git clone …/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
+git clone …/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB
+git clone …/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
+git clone …/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB          # data-processer-* branches
+git clone …/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone    # develop (ClientService.API)
+git clone …/ai-workspace.git                        ai-workspace
+
+./ai-workspace/bootstrap.sh      # instructions, commands, settings, memory links, MCP servers, secret guard
+claude                           # /mcp → atlassian-isos → Authenticate
+twg                              # OAuth on first run
+aws sso login                    # account 739075353953, ap-southeast-1
+# open the DB tunnels (ports in access/ACCESS.md)
+./ai-workspace/doctor.sh         # one line per check</code></pre>
+<p>The folder names matter: the memory notes and the workspace instructions refer to repos by these names, and Claude Code keys memory by the absolute path, which <code>bootstrap.sh</code> computes for whatever path you cloned to.</p>
+<p><code>doctor.sh</code> output on the reference machine, 21 Sep 2026: every check green except the RSA prod tunnel, which was simply not open.</p>
+
+<h2>4. How memory stays shared</h2>
+<ul>
+<li><p>Claude Code writes memory notes to <code>~/.claude/projects/&lt;slug&gt;/memory/</code>. The kit makes that directory a <strong>symlink into the repo</strong>, so a note written at the end of a ticket is a file in <code>ai-workspace/memory/</code> waiting to be committed. The workspace <code>CLAUDE.md</code> tells the agent to do exactly that at the end of each ticket.</p></li>
+<li><p>The human reviews the memory diff like any other diff. Wrong facts are corrected or deleted, not left to mislead the next session.</p></li>
+<li><p>A pre-commit guard (<code>claude/secret-guard.pl</code>) refuses Atlassian tokens, AWS keys, JWTs and password values. Building the kit found one real password in an old note; it is now a pointer to the secret's name.</p></li>
+<li><p>Two developers on the same ticket share notes through git the same way they share code. Conflicts are rare because notes are one fact per file.</p></li>
+</ul>
+
+<h2>5. What stays personal</h2>
+<table data-width="760"><thead><tr><th><p>Item</p></th><th><p>Why it is not in the kit</p></th></tr></thead><tbody>
+<tr><td><p>Atlassian OAuth (MCP and twg), Bitbucket app password, AWS SSO</p></td><td><p>Identity — every action the agent takes is attributed to you</p></td></tr>
+<tr><td><p><code>~/.config/atlassian/token</code> (Confluence attachment uploads)</p></td><td><p>A credential; the recipe is documented, the value is yours</p></td></tr>
+<tr><td><p>SSH tunnel definitions</p></td><td><p>Keys and bastions are per person; the <em>ports</em> are the shared convention</p></td></tr>
+<tr><td><p><code>.claude/settings.local.json</code></p></td><td><p>Your own extra allow rules, accumulated by saying "always allow"; the kit's <code>settings.json</code> is the reviewed baseline</p></td></tr>
+</tbody></table>
+
+<h2>6. Keeping the kit honest</h2>
+<ol>
+<li><p>A fact changes (a pipeline, a branch, an environment id) → fix it in <code>workspace/</code> or <code>memory/</code>, commit, push. The Confluence pages that quote it are regenerated from <code>confluence/</code> when they are the generated ones, or edited when they are prose.</p></li>
+<li><p>A new repo joins the workspace → add <code>workspace/repos/&lt;NAME&gt;/CLAUDE.md</code> and a memory folder; <code>bootstrap.sh</code> picks both up.</p></li>
+<li><p>A command proves useful across tickets → it goes into <code>claude/commands/</code>, not into one person's <code>~/.claude</code>.</p></li>
+<li><p><code>doctor.sh</code> is the first thing to run when "the agent can't see X" — it says which of the tools, links, MCP servers, credentials or tunnels is missing.</p></li>
+</ol>
+
+<p>Back to the <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837665931">Overview</a>.</p>
