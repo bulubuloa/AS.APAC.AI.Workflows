@@ -66,6 +66,8 @@ if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "clau
 # 5b. Codex CLI (OpenAI) — same content, its file names: AGENTS.md, ~/.codex/prompts, config.toml
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ]; then
+  # the ChatGPT desktop app bundles the codex CLI but does not put it on PATH; a short name keeps commands on one line
+  if ! command -v codex >/dev/null && [ -x "/Applications/ChatGPT.app/Contents/Resources/codex" ]; then mkdir -p "$HOME/.local/bin"; ln -sf /Applications/ChatGPT.app/Contents/Resources/codex "$HOME/.local/bin/codex"; say "codex: linked ~/.local/bin/codex"; fi
   mkdir -p "$CODEX_HOME/prompts"
   backup "$CODEX_HOME/AGENTS.md"; sed 's/Co-Authored-By: Claude/Co-Authored-By: Codex/' "$KIT/claude/CLAUDE.md" > "$CODEX_HOME/AGENTS.md"
   for c in "$KIT"/codex/prompts/*.md; do cp "$c" "$CODEX_HOME/prompts/"; done
