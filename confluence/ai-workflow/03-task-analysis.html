@@ -1,0 +1,119 @@
+<p>Part 3 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> before a line of code changes, the task file gains an <em>Analysis</em> section that names the root cause (or the design), cites the exact code, quantifies the blast radius from real data, and lists the questions only a human can answer. The BA gets the same content as a Jira comment.</p></div>
+
+<h2>1. What "analysis" means here</h2>
+<p>Most AI-assisted bugs go wrong in the same way: the agent reads the ticket, finds the first plausible line of code, and patches it. The patch is often correct for the one example in the ticket and wrong for the other 300 rows nobody looked at. Analysis is the step that forces the agent to <em>verify before it believes</em> — in the code, in the database, in the CMS, in the logs — and to write down what it found in a form a reviewer can check.</p>
+<p>The output is text, not code. It is appended to <code>issues/&lt;KEY&gt;.md</code> under <code>## Analysis</code> and, once you have read it, posted to the ticket.</p>
+
+<h2>2. The procedure</h2>
+<table data-layout="default">
+<thead><tr><th>#</th><th>Step</th><th>Agent does</th><th>Tools</th><th>Output</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>Load the brief</strong></td><td>Reads the task file and every linked Confluence page; restates the goal in one sentence and lists what it will need to verify.</td><td>Read, <code>getConfluencePage</code></td><td>3–5 bullet understanding, list of unknowns</td></tr>
+<tr><td>2</td><td><strong>Locate the code</strong></td><td>Finds every touchpoint of the feature across the repos: controllers, SQL/EF queries, stored procedures, front-end calls, sync jobs, scheduled tasks. Uses a sub-agent for broad sweeps so the main context stays clean.</td><td>Grep, Explore agent, <code>git log -S</code></td><td>Touchpoint table with <code>file:line</code></td></tr>
+<tr><td>3</td><td><strong>Form hypotheses</strong></td><td>Writes down 2–3 candidate causes ranked by likelihood, each with the evidence that would confirm or kill it.</td><td>—</td><td>Hypothesis list</td></tr>
+<tr><td>4</td><td><strong>Verify against data</strong></td><td>Runs read-only queries on UAT (and SELECT-only on prod when the bug is prod-only); calls the CMS Delivery API; searches CloudWatch Logs for the exception. Records every query and its row count.</td><td><code>sqlcmd</code>/<code>mysql</code>, <code>curl</code>, <code>aws logs</code></td><td>Facts table, each tagged <code>[measured]</code></td></tr>
+<tr><td>5</td><td><strong>Name the cause / design</strong></td><td>States the root cause with the exact code path, or for a feature, the design that fits existing patterns. Explains why the symptom in the ticket follows from it.</td><td>—</td><td>Root cause paragraph</td></tr>
+<tr><td>6</td><td><strong>Measure blast radius</strong></td><td>How many rows / users / clients share the condition? Which other flows read the same field? What breaks if we fix it the obvious way?</td><td>SQL, Grep</td><td>Blast-radius table with severity</td></tr>
+<tr><td>7</td><td><strong>Separate decisions from facts</strong></td><td>Lists every choice that is a business rule, not an engineering one, and phrases each as a question with the options and their consequences.</td><td>AskUserQuestion</td><td>Open questions for BA/QA</td></tr>
+<tr><td>8</td><td><strong>Plan</strong></td><td>Files to change, order of changes, DB scripts, config, tests, verification steps, rollback. Small enough that Part 4 can execute it without re-thinking.</td><td>—</td><td>Numbered plan</td></tr>
+<tr><td>9</td><td><strong>Publish</strong></td><td>Appends the section to the task file; after you review, posts a condensed version as a Jira comment.</td><td>Write, <code>addCommentToJiraIssue</code></td><td>Analysis section + comment</td></tr>
+</tbody></table>
+
+<h2>3. Invoking it</h2>
+<p>Either the slash command (<code>/task-analyse issues/ABE-5457.md</code>, defined in <code>.claude/commands/task-analyse.md</code> at the workspace root) or a plain prompt. The prompt below is the one that produced the ABE-5457 audit; it is deliberately explicit about verification and about what <em>not</em> to do.</p>
+<blockquote>
+<p>Read issues/ABE-5457.md. Do not change any code. Find the root cause of the provider not appearing in Auto mode: trace the autocomplete request from the RSA web app to the SQL it runs, then trace how that provider's row is populated by the Benefit → RSA sync (ABVB VendorServerless and the RSA ProviderSyncBenefit controller). Verify each claim against the prod DB with SELECT-only queries through the existing tunnel, and against the Kontent prod Delivery API. Then audit every other place in BkkIsos47.sln that reads provider fields from cloud.UserAccount, and tell me what breaks if we stop syncing and read from the CMS only. Cite file:line for every code claim and the query + row count for every data claim. Tag numbers [measured] or [assumption]. Append the result under ## Analysis in the task file. List questions for the BA separately.</p>
+</blockquote>
+
+<h2>4. Worked example — ABE-5457 (condensed)</h2>
+<p>The ticket: one provider missing from Auto-mode dispatch. The analysis, done on <time datetime="2026-09-16">16 Sep 2026</time> against prod data, read-only:</p>
+
+<h3>4.1 Root cause (step 5)</h3>
+<p><code>AutofillController.ProviderName</code> (<code>BkkRsa/Api/AutofillController.cs:83</code>) adds <code>ua.isProviderMobile == true</code> to the query when <code>timeStampMode == "A"</code>. Both lookup paths — RSA name match (<code>:87</code>) and CMS-name → <code>vendorCmsId</code> (<code>:101</code>) — go through that base query. The live Ver2 sync <code>ProviderSyncBenefitController.ProviderSyncDataVer2</code> (<code>:494-570</code>) writes dispName, userName, mobile, active, group and note but <strong>never <code>isProviderMobile</code></strong>; only the legacy v1 <code>MapUserAccount</code> (<code>:743</code>) does. The Benefit-side request models (<code>VendorServerless.Shared/Requests/ProviderRoadside.cs:27-42</code>) carry no mobile field at all. The provider edit page overlays the CMS value (ABE-5319), so the screen shows <em>Mobile Provider</em> ticked while the column says 0 — which is exactly why the ticket looked like a UI bug.</p>
+
+<h3>4.2 Facts the analysis rests on (step 4)</h3>
+<table data-layout="default">
+<thead><tr><th>Fact</th><th>Value</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Provider row</td><td><code>2-0938</code>, <code>active=1</code>, <code>isDelete=0</code>, <code>isProviderMobile=0</code>, <code>StatusSysnData='Update From Benefit'</code></td><td>SELECT on <code>cloud.UserAccount</code> [measured]</td></tr>
+<tr><td>CMS item</td><td>status active, <code>mobile_vendor = yes</code></td><td>Kontent Delivery API, env <code>994226e6</code> [measured]</td></tr>
+<tr><td>Providers in the same state</td><td><strong>317</strong> of 783 CMS-linked providers: CMS mobile=yes + active on both sides, RSA flag 0/NULL</td><td>JOIN of RSA export and CMS list [measured]</td></tr>
+<tr><td>Auto-mode traffic affected</td><td>8,338 Auto jobs in 90 days across 82 providers</td><td><code>JobInfo</code> aggregate [measured]</td></tr>
+<tr><td>Caveat</td><td>CMS has <code>mobile_vendor=yes</code> on 687/752 roadside vendors, including call-centre vendors — a migration default, not a business decision</td><td>CMS list [measured]; interpretation [assumption]</td></tr>
+</tbody></table>
+
+<h3>4.3 Blast radius (step 6)</h3>
+<p>The sweep found <strong>30+ touchpoints</strong> across identity/auth, dispatch, job save, monitoring, partner API and reports that read provider fields from the RSA table, each rated 🔴 breaks / 🟠 degrades / 🟢 unaffected under a "CMS-only" design. Three examples:</p>
+<ul>
+<li>🔴 Near-provider SQL for Auto dispatch joins <code>cloud.UserAccount</code> inside the query — cannot post-filter on a CMS call per dispatch.</li>
+<li>🔴 Benefit redemption validation matches on <code>BenefitVendorId</code>, a synced column — stopping the sync reintroduces the name-matching bug ABE-4868 removed.</li>
+<li>🟢 Partner app endpoints key on <code>accountId</code> from the JWT and never read display fields.</li>
+</ul>
+<p>Conclusion for the BA: the one-line fix (write <code>isProviderMobile</code> in the Ver2 sync) is safe; the "read everything from CMS" idea floated in the ticket is not, and the table shows why.</p>
+
+<h3>4.4 Questions raised, not answered (step 7)</h3>
+<ul>
+<li>Back-fill the 317 providers from the CMS flag now, or let the next sync fix each one as it is edited? (Consequence: 317 providers become eligible for Auto dispatch overnight, including call-centre vendors.)</li>
+<li>Is <code>mobile_vendor=yes</code> on 687/752 vendors intended? If not, the CMS needs cleaning before any back-fill.</li>
+</ul>
+
+<h3>4.5 Plan (step 8)</h3>
+<ol>
+<li>ABMB: map <code>isProviderMobile</code> in <code>ProviderSyncDataVer2</code> from the incoming request; ABVB: add the field to <code>ProviderRoadsideVer2</code> / <code>VendorRequestVer2</code> sourced from the Kontent module element.</li>
+<li>Unit test on the sync mapper; Playwright check on the provider edit page and the Auto-mode autocomplete on UAT.</li>
+<li>Optional back-fill script, gated on the BA's answer, run on UAT first with a before/after count.</li>
+<li>Release note line + rollback: revert the two mappers; the column is additive.</li>
+</ol>
+
+<h2>5. Guardrails</h2>
+<ul>
+<li><strong>Read-only, always.</strong> Analysis never writes to a database, never edits code, never transitions a ticket. If the agent proposes an UPDATE "just to test", the answer is no — that is Part 4 on UAT.</li>
+<li><strong>Prod data only when UAT cannot answer.</strong> And then SELECT with aggregates; no row dumps of customer data into the conversation.</li>
+<li><strong>Every number has a provenance.</strong> <code>[measured]</code> means the query is in the file and re-runnable; <code>[assumption]</code> means someone has to confirm it before it is quoted to a client.</li>
+<li><strong>Cite or delete.</strong> A code claim without <code>file:line</code>, or a data claim without a query, is removed before the comment goes to Jira.</li>
+<li><strong>Two sources for anything surprising.</strong> "The sync never writes the flag" was checked in code <em>and</em> confirmed by the 317-row count. One without the other is a hypothesis.</li>
+<li><strong>Time-box.</strong> Analysis of a normal bug should be under an hour of agent time. If it keeps sweeping, narrow the prompt: name the repo, the controller, the table.</li>
+<li><strong>Sub-agents for sweeps, main agent for judgement.</strong> "Find every reader of column X across 11 projects" goes to an Explore agent that returns a table; the main session interprets it. Keeps the context small and the reasoning visible.</li>
+</ul>
+
+<h2>6. Analysis section template</h2>
+<pre><code class="language-markdown">## Analysis
+Verified &lt;date&gt; against &lt;env&gt; (&lt;DB&gt;, read-only) and &lt;CMS env&gt;. Code = &lt;branch&gt; (&lt;sha&gt;).
+
+### Understanding
+- &lt;3–5 bullets&gt;
+
+### Root cause / design
+&lt;paragraph with file:line citations&gt;
+
+### Facts
+| Fact | Value | Source / query | Tag |
+|---|---|---|---|
+
+### Blast radius
+| # | Feature | Code | Reads | Impact if changed | Sev |
+|---|---|---|---|---|---|
+
+### Open questions for BA/QA
+1. &lt;question — options — consequence of each&gt;
+
+### Plan
+1. &lt;repo: change&gt;
+2. &lt;tests / verification&gt;
+3. &lt;scripts / config / release note / rollback&gt;</code></pre>
+
+<h2>7. Prompts that work</h2>
+<table data-layout="default">
+<thead><tr><th>Situation</th><th>Prompt pattern</th></tr></thead>
+<tbody>
+<tr><td>Bug with a clear symptom</td><td>"Trace &lt;symptom&gt; from the UI action to the SQL/API it hits. Verify each hop against UAT. Do not fix."</td></tr>
+<tr><td>Bug that "only happens in prod"</td><td>"Compare the config and data path for &lt;feature&gt; between UAT and prod: Parameter Store, Web.config, CMS environment id, SP definitions. List every difference."</td></tr>
+<tr><td>Feature request touching several repos</td><td>"Map every touchpoint for &lt;entity&gt; across ABMB, ABVB, ABF, ABCB. For each, say what changes to add &lt;field&gt;. Propose the smallest sequence of PRs that keeps each deploy backward-compatible."</td></tr>
+<tr><td>"Is it safe to remove X?"</td><td>"Find all readers of &lt;X&gt; including SQL, SPs, views, reports and scheduled jobs. Rate each 🔴/🟠/🟢. Run counts on UAT for the rows that would be affected."</td></tr>
+<tr><td>Vague ticket</td><td>"List what the ticket does not say that you would need to know to implement it. Put each as a question with a default you would pick and why."</td></tr>
+</tbody></table>
+
+<h2>Next</h2>
+<p><strong>4. Implement &amp; Verify</strong> — executing the plan on a feature branch and proving it works in a real browser and the real database.</p>

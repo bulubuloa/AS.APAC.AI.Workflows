@@ -1,0 +1,109 @@
+<p>Worked example for <em>AI in the Development Workflow</em>. Session of <time datetime="2026-09-21">21 Sep 2026</time>, ABCB repository (<code>apac-benefit-client-backend</code>), DataProcesser. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>What this page is.</strong> One real session, reconstructed from its transcript with the actual timestamps. Two prompts from the developer; everything else is what the agent did in between, mapped to the steps in Parts 2–5. Nothing here is a demo — the commits are on branch <code>jira/ABE-5177-5178-5179-5152-5153-5155-5156-5159-5158-5160-5174-5176-hanback-report</code> and the numbers are what the queries returned.</p></div>
+
+<h2>1. The situation</h2>
+<p>Sprint 70 contained 11 tickets under epic ABE-5148, all against the DataProcesser (the Batch job that imports client customer files into the Benefit database). Two kinds of work, one per client:</p>
+<ul>
+<li><strong>Program mapping by ProgramNumber</strong> — stop resolving a client's program by <code>ProgramCode</code> / <code>Programs.ClientId</code> / <code>ClientCode</code> (which differ between UAT and PROD) and resolve by <code>Programs.ProgramNumber</code> instead. Four clients already had the Handback report: TRI, TTR, MSU, TMI.</li>
+<li><strong>Data Processor Report (Handback) + ProgramNumber</strong> — retrofit the per-row Inserted / Updated / SameData / Invalid / DuplicateUUID report that ABF shows, onto seven legacy processors that never had it: AEO, CHU, KTC, MSH, KUC, SMC, KPI.</li>
+</ul>
+<p>Eleven clients, seven of them legacy code written by different people over several years, each with its own file format (Excel, fixed-width text, PGP-encrypted, zip with member files, email attachment). Done by hand this is a sprint's worth of work for one developer.</p>
+
+<h2>2. The two prompts</h2>
+<table data-layout="default">
+<thead><tr><th>Time</th><th>Developer typed</th></tr></thead>
+<tbody>
+<tr><td>08:43</td><td><em>"check my issues in sprint 70, all of them is data processor update, some client just use program number, some clients just support use Handback report feature on ABF. please implement all, each client each commits"</em> + the board URL</td></tr>
+<tr><td>09:32</td><td><em>"deploy UAT for all, then do real test, also update drop lambda test"</em></td></tr>
+</tbody></table>
+<p>Note what the first prompt contains: the scope (sprint 70, my issues), the two categories, and one process rule (one commit per client). It does not say which clients, which files, or how — the agent has to find that out. That is the point of Parts 2 and 3.</p>
+
+<h2>3. Timeline</h2>
+<table data-layout="default">
+<thead><tr><th>Window</th><th>Phase (series part)</th><th>What happened</th></tr></thead>
+<tbody>
+<tr><td>08:43 – 08:44</td><td>Fetch (Part 2)</td><td>Two JQL searches via the Atlassian MCP (<code>project = ABE AND assignee = currentUser() AND sprint in (openSprints(), futureSprints())</code>), descriptions printed and read. Report-type tickets share a template; the four ProgramNumber-only ones were checked for client-specific notes.</td></tr>
+<tr><td>08:44 – 09:04</td><td>Analysis (Part 3), <strong>20 min</strong></td><td>Reference commits found in git history (KXA for ProgramNumber, TYT and HOT/MBZ/HOG/AOI/MIT for report retrofits) and diffed. All 11 client processors read. Both database tunnels detected, credentials pulled from Secrets Manager without writing them to disk, programs and tiers listed per client in UAT <em>and</em> PROD. Program-assignment coverage checked in PROD. Input file sizes checked on S3, EventBridge rules listed. UUID field configs listed per client in both envs. Baseline build run. See §4 for what this turned up.</td></tr>
+<tr><td>09:05 – 09:29</td><td>Implement (Part 4), <strong>24 min</strong></td><td>Shared helper <code>Common/ProgramTierLookup.cs</code> written first, then TRI → TTR → MSU → TMI, build, tests, four commits. Shared <code>Services/Handback/HandbackRowCollector.cs</code> written, then AEO → CHU → KTC → MSH → KUC → SMC → KPI, each: constants, processor retrofit, reader rewrite, build, test, commit. Full suite: 627 tests pass.</td></tr>
+<tr><td>09:29 – 09:31</td><td>Verify (Part 4)</td><td>Every new ProgramNumber + tier-name lookup simulated against both databases. <strong>One warning:</strong> SMC's number matched two live programs. Investigated, fixed in the shared helper, tests re-run, 12th commit.</td></tr>
+<tr><td>09:31 – 09:32</td><td>Record</td><td>Non-obvious findings saved to the project memory; summary with commit table, env differences and behaviour changes delivered. Nothing pushed.</td></tr>
+<tr><td>09:32 – <em>ongoing</em></td><td>Deploy to UAT &amp; real test (Part 4/5)</td><td>Read the UAT pipeline notes and the QA test-drop tool; inventoried UAT job definitions, EventBridge and SES rules for the 11 clients; built the image and pushed it to ECR with the UAT tag; registered 11 UAT Batch job definitions cloned from the CSM template with per-client env; now extending the test-drop Lambda and preparing test files (PGP for KTC/SMC). <em>This page will be updated when the UAT runs are through.</em></td></tr>
+</tbody></table>
+<p>Developer involvement between 08:43 and 09:32: none. The session ran while the developer did something else and came back to the summary.</p>
+
+<h2>4. What the analysis found — and why it mattered</h2>
+<p>These are the things a "just implement it" pass would have missed. Each one changed the code that was written.</p>
+<table data-layout="default">
+<thead><tr><th>Finding</th><th>How it was found</th><th>Consequence in the code</th></tr></thead>
+<tbody>
+<tr><td><strong>KUC and MSH have different ProgramNumbers in UAT and PROD.</strong> The other nine are identical in both.</td><td>Program list per client queried in both DBs [measured]</td><td>Constants switch on <code>CONNECTION_TARGET == "PROD"</code>, overridable by <code>KUC_PROGRAM_NUMBER</code> / <code>MSH_PROGRAM_NUMBER</code>. A single hard-coded value would have silently attached nothing in one environment.</td></tr>
+<tr><td><strong>ProgramNumber is not unique.</strong> SMC's number is also on a BBK program, in both envs.</td><td>Post-implementation simulation of every lookup against both DBs</td><td>Shared lookup prefers the program whose <code>ClientId</code> belongs to the calling client. Found <em>after</em> the SMC commit — hence the 12th commit.</td></tr>
+<tr><td><strong>CHU's import never assigned a program at all</strong>: 114 of 117 imported PROD customers have none.</td><td>Program-assignment coverage query per client in PROD [measured]</td><td>Ticket said "map by ProgramNumber"; there was nothing to map. Implemented as: attach the Chubb program / "Chubb Kids Privilege Customers" tier on insert and to touched customers lacking it. Flagged in the summary as a <strong>behaviour change for the BA to confirm</strong>.</td></tr>
+<tr><td><strong>KUC in UAT attached no program</strong> because the UAT program row has <code>Programs.ClientCode = NULL</code>.</td><td>Same query</td><td>Explains a UAT-only symptom nobody had a ticket for; fixed by the switch to ProgramNumber.</td></tr>
+<tr><td><strong>KTC files are ~167 MB (millions of rows); SMC ~5 MB PGP.</strong> KTC last received a file in 2025-09; SMC EventBridge rules are disabled.</td><td>S3 object sizes and EventBridge rule list [measured]</td><td>Report detail lists capped at 200k rows per category for KTC/SMC (summary counts stay exact) so the Handback report cannot exhaust memory. Deployment notes flag the disabled rules.</td></tr>
+<tr><td><strong>Tier names are stored as plain text or <code>{"en": "…"}</code> JSON with random whitespace.</strong></td><td>Tier table inspected in both envs</td><td><code>ProgramTierLookup.TierNameMatches</code> normalises before comparing; raw string comparison would have missed tiers.</td></tr>
+<tr><td><strong>No API-side whitelist for the Handback report</strong> — ABF's report is generic per client code.</td><td>Grep for handback references outside DataProcesser</td><td>Scope confirmed as DataProcesser only; no ABF/ClientService change needed.</td></tr>
+<tr><td><strong>AEON silently ended as "No valid data"</strong> on a broken zip or a missing member file.</td><td>Reading the AEON processor</td><td>Those are now Failed runs with a reason in the report.</td></tr>
+</tbody></table>
+
+<h2>5. The commits</h2>
+<table data-layout="default">
+<thead><tr><th>Commit</th><th>Issue</th><th>Client</th><th>Kind</th></tr></thead>
+<tbody>
+<tr><td><code>86b51df9c</code></td><td>ABE-5174</td><td>TRI — plus shared <code>Common/ProgramTierLookup.cs</code> and <code>ProgramNumberMappingTests</code></td><td>ProgramNumber</td></tr>
+<tr><td><code>fc8c369b4</code></td><td>ABE-5176</td><td>TTR</td><td>ProgramNumber</td></tr>
+<tr><td><code>136eef419</code></td><td>ABE-5178</td><td>MSU</td><td>ProgramNumber</td></tr>
+<tr><td><code>499399e26</code></td><td>ABE-5177</td><td>TMI (RSA, Thai Orix, Mitsubishi sub-templates)</td><td>ProgramNumber</td></tr>
+<tr><td><code>e6cc6fc4c</code></td><td>ABE-5152</td><td>AEO — plus shared <code>Services/Handback/HandbackRowCollector.cs</code> and tests</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>9883a8286</code></td><td>ABE-5153</td><td>CHU (new program assignment)</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>9a24adbe5</code></td><td>ABE-5155</td><td>KTC (200k cap)</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>bd12b9e7f</code></td><td>ABE-5156</td><td>MSH (reads the triggering email, not newest-in-prefix)</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>45fb2d721</code></td><td>ABE-5158</td><td>KUC (env-specific number)</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>ab68567cd</code></td><td>ABE-5159</td><td>SMC (200k cap)</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>b9bb79864</code></td><td>ABE-5160</td><td>KPI</td><td>Report + ProgramNumber</td></tr>
+<tr><td><code>fe210a3ae</code></td><td>ABE-5159</td><td>Lookup prefers the client's own program when a ProgramNumber is shared</td><td>Fix from verification</td></tr>
+</tbody></table>
+<p>33 files, +1,530 / −184 lines. Every commit message follows <code>ABE-xxxx Imperative summary</code>; the commit-per-client rule means a wrong client can be reverted alone and each ticket's PR review is one commit.</p>
+
+<h2>6. What the agent did that a script could not</h2>
+<ul>
+<li><strong>Found its own reference implementations.</strong> Instead of inventing a report format, it searched git history for the last clients that got the report (TYT, HOT, AOI/MIT) and diffed those commits. The seven retrofits follow the same shape as the existing ones, which is what the reviewer expects.</li>
+<li><strong>Wrote the shared code first.</strong> Two helpers (<code>ProgramTierLookup</code>, <code>HandbackRowCollector</code>) instead of eleven copies. The cap for large files was added to the collector when KTC needed it, then reused for SMC.</li>
+<li><strong>Refused to invent behaviour.</strong> On finding CHU had no program assignment, it queried PROD to see whether that was true for imported customers generally before deciding what "map by ProgramNumber" should mean — and then flagged the decision instead of burying it.</li>
+<li><strong>Verified the whole set at the end, not just each piece.</strong> The shared-ProgramNumber collision only shows up when you simulate every lookup together against real data. That is the query that turned a latent prod bug into a 12th commit.</li>
+<li><strong>Kept secrets out of the transcript.</strong> Connection strings came from Secrets Manager into an in-memory helper; passwords were never printed or written to disk.</li>
+<li><strong>Left the decisions to the humans.</strong> Nothing pushed, no PR, no Jira transition. The summary ends with the behaviour changes that need a BA answer.</li>
+</ul>
+
+<h2>7. What made it work (preconditions)</h2>
+<table data-layout="default">
+<thead><tr><th>Precondition</th><th>Where it came from</th></tr></thead>
+<tbody>
+<tr><td>Atlassian MCP connected; JQL search allow-listed</td><td>Part 1</td></tr>
+<tr><td>Both DB tunnels already open, prod with a read-only login</td><td>Developer's environment; documented in the project notes</td></tr>
+<tr><td><code>aws</code> CLI with the SSO profile — Secrets Manager, S3, EventBridge, ECR, Batch</td><td>Part 1 allow-list</td></tr>
+<tr><td>Project memory from earlier sessions: the new-client pattern (TRI as template), the FieldMapping convention (DTO property = DB FieldCode — an earlier session got this backwards and produced 100% INVALID rows), env-specific master-data IDs, the UAT pipeline bump procedure, the test-drop tool</td><td>Written at the end of previous tickets, exactly as Part 5 §6 says</td></tr>
+<tr><td>A green baseline build and a test project the agent could extend</td><td>Repo hygiene</td></tr>
+<tr><td>Commit conventions in the developer's global instructions (one line, ticket ID, no AI trailer)</td><td><code>~/.claude/CLAUDE.md</code></td></tr>
+</tbody></table>
+<p>Take away any one of these and the session gets slower or asks questions. Take away the memory notes and it repeats the FieldMapping mistake.</p>
+
+<h2>8. What the developer still has to do</h2>
+<ul>
+<li>Read the summary and the diff for the two behaviour changes (CHU program assignment, AEON failure handling) and put the CHU question to the BA — via <code>twg jira workitem comment create</code> or the browser (the MCP cannot write to Jira on our tenant).</li>
+<li>Watch the UAT runs the agent is setting up now; confirm the Handback report renders in ABF for each of the seven new clients.</li>
+<li>Push, open the PR(s) to the UAT branch, run the AI review in a fresh session (Part 5 §3), then the human review.</li>
+<li>Keep the untracked local data files and <code>issues/</code> content out of the repo — the 28 Aug release had to strip exactly that kind of file.</li>
+</ul>
+
+<h2>9. If you want to try the same thing</h2>
+<ol>
+<li>Pick a sprint (or a label) where the tickets are the same <em>kind</em> of change across several clients/modules. Homogeneous batches are where the agent's speed compounds.</li>
+<li>Write one prompt with: the scope (JQL-able), the categories of change in your words, and the process rules (commit granularity, branch, what not to touch).</li>
+<li>Make sure tunnels, AWS SSO and MCP auth are live <em>before</em> you start — the agent will stop at the first 401.</li>
+<li>Read the summary, not the transcript. Then read the diff of anything the summary calls a behaviour change.</li>
+<li>When it is done, ask the agent to save what it learned to the project memory. That is what made this session 48 minutes instead of a day.</li>
+</ol>
+
+<p>Back to the <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837665931">Overview</a>.</p>

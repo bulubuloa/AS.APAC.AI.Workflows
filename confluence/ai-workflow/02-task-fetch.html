@@ -1,0 +1,124 @@
+<p>Part 2 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> one command turns a Jira key into <code>issues/ABE-xxxx.md</code> — a local task file holding everything the ticket knows, structured so both the developer and the agent work from the same brief for the rest of the ticket's life.</p></div>
+
+<h2>1. Why a file, not a chat</h2>
+<ul>
+<li><strong>Context survives.</strong> Long sessions get compacted; a file on disk does not. Tomorrow's session starts with <code>read issues/ABE-5457.md</code> and is fully caught up.</li>
+<li><strong>It is reviewable.</strong> You read the brief the agent will work from <em>before</em> it starts coding, and fix misunderstandings at the cheapest moment.</li>
+<li><strong>It accumulates.</strong> Analysis, decisions, verification evidence and deployment notes are appended to the same file (see Parts 3–5). By release time it is the draft of the Confluence release page.</li>
+<li><strong>It is shareable.</strong> A colleague picking up the ticket gets the file, not a chat transcript.</li>
+</ul>
+
+<h2>2. The command</h2>
+<p>Claude Code slash commands are Markdown files in <code>.claude/commands/</code> (project — we keep them at the workspace root that holds all the ABE repos, so one copy serves ABMB, ABVB, ABF and ABCB) or <code>~/.claude/commands/</code> (personal). <code>/task-fetch</code> is one such file; the agent reads it and follows the steps with <code>$1</code> replaced by what you typed.</p>
+<pre><code class="language-bash">/task-fetch ABE-5457
+/task-fetch https://internationalsos.atlassian.net/browse/ABE-5457</code></pre>
+
+<h3>2.1 Command definition (<code>.claude/commands/task-fetch.md</code>)</h3>
+<pre><code class="language-markdown">---
+description: Fetch a Jira ticket and create a task file in issues/
+argument-hint: &lt;jira-url-or-key&gt;
+---
+
+Fetch the Jira ticket referenced by $1 and create a task file in `issues/`.
+
+## Step 1 — Parse input
+`$1` is a key (`ABE-5457`) or a browse URL. Extract the key.
+
+## Step 2 — Fetch via the Atlassian MCP (server `atlassian-isos`)
+1. `getJiraIssue` for the key. Keep: summary, description, status, priority,
+   issue type, labels, components, fixVersions, assignee, reporter, parent,
+   sub-tasks, issue links (with direction and link type), created/updated.
+2. `getJiraIssueRemoteIssueLinks` — Confluence pages and external links.
+3. Comments: read all of them; keep author, date, body. Quote them verbatim
+   under Notes — do not summarise away a BA decision.
+4. For every linked or parent issue, `getJiraIssue` again for summary + status
+   only (one level deep, no recursion).
+5. If the MCP is not available, stop and tell the user to run `/mcp`.
+
+## Step 3 — Write `issues/&lt;KEY&gt;.md`
+If the file exists, ask before overwriting; offer `-v2`.
+Use the template below. Preserve the description as Markdown, including
+tables and checkbox lists. Attachment names go under Notes with a reminder
+to download them into `issues/` (the MCP cannot fetch binaries).
+
+## Step 4 — Confirm and stop
+Print the path, a one-line summary, and the next step:
+`/task-analyse issues/&lt;KEY&gt;.md`. Do NOT start analysing or coding.</code></pre>
+
+<h3>2.2 The task-file template</h3>
+<pre><code class="language-markdown"># ABE-5457 — Provider not returned in Auto mode
+
+&gt; Jira: https://internationalsos.atlassian.net/browse/ABE-5457
+&gt; Type: Bug · Status: In Progress · Priority: High · Fix version: —
+&gt; Reporter: &lt;name&gt; · Assignee: Hoang Quach · Updated: 2026-09-15
+&gt; Parent: — · Links: relates to ABE-5319 (Done), blocks ABE-5460 (Open)
+&gt; Confluence: Release Note v21.01, Vendor Module User Manual
+
+## Context
+&lt;ticket description, verbatim Markdown&gt;
+
+## Goal
+&lt;one sentence — what "done" looks like for the BA&gt;
+
+## Requirements
+- &lt;3–7 concrete statements, extracted or inferred; mark inferred ones (inferred)&gt;
+
+## Acceptance criteria
+- [ ] &lt;from the ticket, or a placeholder to fill during analysis&gt;
+
+## Out of scope
+&lt;explicit exclusions from the ticket, else "not stated"&gt;
+
+## Open questions
+&lt;anything the description leaves ambiguous — feeds the clarify step&gt;
+
+## Notes / comments
+- 2026-09-12 BA (Jessie): "…"     ← verbatim
+- Attachments: screenshot-auto-mode.png (download to issues/)
+
+## Analysis        ← appended by Part 3
+## Implementation  ← appended by Part 4
+## Verification    ← appended by Part 4
+## Release         ← appended by Part 5</code></pre>
+
+<h2>3. Worked example — ABE-5457</h2>
+<p>The ticket said, in full: <em>"Provider 2-0938 Asia Lue Garage is not shown when the agent selects Auto mode. Manual mode shows it. Provider is active in the Benefit system."</em> One screenshot was attached.</p>
+<p><code>/task-fetch ABE-5457</code> produced a file whose useful parts were not the description but the surroundings the agent pulled in:</p>
+<table data-layout="default">
+<thead><tr><th>Pulled from</th><th>What it added</th><th>Why it mattered later</th></tr></thead>
+<tbody>
+<tr><td>Issue links</td><td><code>relates to ABE-5319</code> — "Provider edit page shows CMS values"</td><td>Explained why the UI showed <em>Mobile Provider</em> ticked while the DB said 0 — the screen overlays CMS data</td></tr>
+<tr><td>Comments</td><td>BA note that the provider "was migrated from the CMS in July"</td><td>Pointed at the sync path, not the dispatch UI</td></tr>
+<tr><td>Remote links</td><td>Release Note v21.01</td><td>Confirmed the Ver2 sync had shipped in the last release</td></tr>
+<tr><td>Attachment name</td><td><code>auto-mode-empty.png</code></td><td>Downloaded manually; showed the exact autocomplete field → <code>AutofillController.ProviderName</code></td></tr>
+</tbody></table>
+<p>Without the fetch step the natural first move would have been to debug the autocomplete. With it, the analysis (Part 3) went straight to the sync and found that <code>isProviderMobile</code> is never written by the Ver2 sync — and that 317 providers share the problem.</p>
+
+<h2>4. Rules for the fetch step</h2>
+<ul>
+<li><strong>Fetch only.</strong> No code reading, no hypotheses, no fixes. The value of the step is a clean brief; mixing in analysis makes the file unreadable and the agent over-eager.</li>
+<li><strong>Verbatim over summary</strong> for BA comments and acceptance criteria. Summaries drop the one word that mattered.</li>
+<li><strong>Mark inference.</strong> Anything the agent had to infer (goal, requirements from prose) is tagged <code>(inferred)</code> so the reader knows what to challenge.</li>
+<li><strong>One level of links.</strong> Parent and directly linked issues, summary + status only. Recursing through the whole epic burns context for nothing.</li>
+<li><strong>Never overwrite silently.</strong> A task file with a filled Analysis section is worth more than a fresh fetch. Re-fetch into <code>-v2</code> and diff if the ticket changed.</li>
+<li><strong>Review before the next step.</strong> Open the file, fix the Goal line if the agent misread the ticket, add what you know that Jira does not. Two minutes here saves an hour later.</li>
+</ul>
+
+<h2>5. Variations</h2>
+<table data-layout="default">
+<thead><tr><th>Situation</th><th>How to handle it</th></tr></thead>
+<tbody>
+<tr><td>Ticket has many sub-tasks</td><td>Fetch the parent once; sub-tasks are listed with status. Fetch a sub-task individually when you pick it up — its file notes <code>Parent: ABE-xxxx</code> so the branch/PR logic in Part 5 stacks onto the parent branch.</td></tr>
+<tr><td>Ticket is an umbrella bug list ("net10 Android issues")</td><td>Keep one file; number the issues in <em>Requirements</em>; each gets its own Analysis sub-heading and its own commit.</td></tr>
+<tr><td>No ticket yet (incident, ad-hoc request)</td><td>Write the file by hand from the template with <code>Jira: —</code>. Create the ticket afterwards and back-fill the key; the file name can be the incident date.</td></tr>
+<tr><td>Ticket only says "see attached spec"</td><td>Fetch pulls the remote link; the agent reads the Confluence page with <code>getConfluencePage</code> and quotes the requirement sections into <em>Context</em>.</td></tr>
+<tr><td>Non-English or mixed-language ticket</td><td>Keep the original under Context; add an English <em>Goal</em> and <em>Requirements</em>. Do not translate the BA's comments.</td></tr>
+</tbody></table>
+
+<h2>6. Where the files live</h2>
+<p>We keep task files in an <code>issues/</code> folder at the workspace root (outside any single repo, because an ABE ticket usually spans ABMB + ABVB + ABF). They are not committed to the product repos. Once a ticket ships, the file's Analysis and Verification sections are what we paste into the Confluence release page — so nothing is lost when the folder is eventually cleaned up.</p>
+
+<h2>Next</h2>
+<p><strong>3. Task Analysis</strong> — reading the code, the data and the logs before writing any of them.</p>

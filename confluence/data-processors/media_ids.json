@@ -1,0 +1,191 @@
+{
+ "00-overview": {
+  "page": "6837534805",
+  "fileId": "90f9cbd2-abd7-40af-b2e3-7b1c2cf9e570",
+  "collection": "contentId-6837534805",
+  "title": "dp-00-overview-flow.png",
+  "attId": "att6837305531"
+ },
+ "AEO": {
+  "page": "6837207212",
+  "fileId": "e600c5cb-1c7e-4726-827a-d1add6f0dcd1",
+  "collection": "contentId-6837207212",
+  "title": "dp-AEO-flow.png",
+  "attId": "att6837567687"
+ },
+ "AOI": {
+  "page": "6837534830",
+  "fileId": "49d8829a-5950-4dd1-9be4-cbb2bca5a557",
+  "collection": "contentId-6837534830",
+  "title": "dp-AOI-flow.png",
+  "attId": "att6837338326"
+ },
+ "CHU": {
+  "page": "6837895273",
+  "fileId": "77416d72-6e50-4801-b37e-c83e813681d5",
+  "collection": "contentId-6837895273",
+  "title": "dp-CHU-flow.png",
+  "attId": "att6838190204"
+ },
+ "CSM": {
+  "page": "6837436520",
+  "fileId": "3527f1c4-fac9-4b73-a604-5d1a96f496e5",
+  "collection": "contentId-6837436520",
+  "title": "dp-CSM-flow.png",
+  "attId": "att6837338332"
+ },
+ "FWD": {
+  "page": "6837207233",
+  "fileId": "a9ea5bb6-7994-4c05-b078-6f1e03fbb0a3",
+  "collection": "contentId-6837207233",
+  "title": "dp-FWD-flow.png",
+  "attId": "att6837305537"
+ },
+ "HOG": {
+  "page": "6837862464",
+  "fileId": "68672d61-4893-4883-8937-8bf9d783028c",
+  "collection": "contentId-6837862464",
+  "title": "dp-HOG-flow.png",
+  "attId": "att6837305543"
+ },
+ "HOT": {
+  "page": "6838222850",
+  "fileId": "a047eef4-a8e9-49ad-8cb5-36dda1259e8f",
+  "collection": "contentId-6838222850",
+  "title": "dp-HOT-flow.png",
+  "attId": "att6837534948"
+ },
+ "KPI": {
+  "page": "6837698662",
+  "fileId": "3ec4c47c-7b3e-4f16-8e54-fc5181c6aefc",
+  "collection": "contentId-6837698662",
+  "title": "dp-KPI-flow.png",
+  "attId": "att6837207311"
+ },
+ "KTC": {
+  "page": "6837534851",
+  "fileId": "8fc3ea0d-13f0-4166-bc9b-3114944c0d9b",
+  "collection": "contentId-6837534851",
+  "title": "dp-KTC-flow.png",
+  "attId": "att6837305549"
+ },
+ "KUC": {
+  "page": "6837895294",
+  "fileId": "ef639892-c5a5-41eb-9be6-18cc906fe925",
+  "collection": "contentId-6837895294",
+  "title": "dp-KUC-flow.png",
+  "attId": "att6837207317"
+ },
+ "KXA": {
+  "page": "6837436541",
+  "fileId": "17a3e514-4d76-4074-bd0a-ae4a5561292e",
+  "collection": "contentId-6837436541",
+  "title": "dp-KXA-flow.png",
+  "attId": "att6838222973"
+ },
+ "MAZ": {
+  "page": "6837698683",
+  "fileId": "cbc2382b-6841-4c7b-b976-59822ef1ee8c",
+  "collection": "contentId-6837698683",
+  "title": "dp-MAZ-flow.png",
+  "attId": "att6838190210"
+ },
+ "MBZ": {
+  "page": "6837665956",
+  "fileId": "4d515582-a3de-46d7-bd86-5fde35e655f1",
+  "collection": "contentId-6837665956",
+  "title": "dp-MBZ-flow.png",
+  "attId": "att6838190216"
+ },
+ "MIT": {
+  "page": "6837698704",
+  "fileId": "d7778502-db6e-40c5-9203-69fd31652828",
+  "collection": "contentId-6837698704",
+  "title": "dp-MIT-flow.png",
+  "attId": "att6838190222"
+ },
+ "MSC": {
+  "page": "6838190114",
+  "fileId": "a09c4730-ff90-407f-b38a-53c21af261a4",
+  "collection": "contentId-6838190114",
+  "title": "dp-MSC-flow.png",
+  "attId": "att6837666043"
+ },
+ "MSH": {
+  "page": "6837665977",
+  "fileId": "a0b0a958-04de-43da-9cda-a67943e7b210",
+  "collection": "contentId-6837665977",
+  "title": "dp-MSH-flow.png",
+  "attId": "att6837207323"
+ },
+ "MSU": {
+  "page": "6837567608",
+  "fileId": "139a418a-094e-4ce5-9d37-fe7f6e52b560",
+  "collection": "contentId-6837567608",
+  "title": "dp-MSU-flow.png",
+  "attId": "att6837207329"
+ },
+ "PBC": {
+  "page": "6837207254",
+  "fileId": "04d430c4-8435-4c75-9fbc-dbb8b6f3d52d",
+  "collection": "contentId-6837207254",
+  "title": "dp-PBC-flow.png",
+  "attId": "att6837895354"
+ },
+ "SMC": {
+  "page": "6837436562",
+  "fileId": "8affd114-b559-442b-8b2c-93eb7d110908",
+  "collection": "contentId-6837436562",
+  "title": "dp-SMC-flow.png",
+  "attId": "att6838222979"
+ },
+ "SOR": {
+  "page": "6837305483",
+  "fileId": "bba40f8a-2c28-4f57-9002-50e3b0bc043f",
+  "collection": "contentId-6837305483",
+  "title": "dp-SOR-flow.png",
+  "attId": "att6837862504"
+ },
+ "TMI": {
+  "page": "6837567629",
+  "fileId": "b371383b-9186-4d47-a6fc-261f8d28cf35",
+  "collection": "contentId-6837567629",
+  "title": "dp-TMI-flow.png",
+  "attId": "att6838190228"
+ },
+ "TPI": {
+  "page": "6838190135",
+  "fileId": "96f4aeee-8ab7-429d-83cf-feaad7cce029",
+  "collection": "contentId-6838190135",
+  "title": "dp-TPI-flow.png",
+  "attId": "att6838222985"
+ },
+ "TRI": {
+  "page": "6837338229",
+  "fileId": "d591bb4d-b343-43f1-a74b-7055d760d074",
+  "collection": "contentId-6837338229",
+  "title": "dp-TRI-flow.png",
+  "attId": "att6837698763"
+ },
+ "TTR": {
+  "page": "6838190156",
+  "fileId": "13efdf15-c797-4bce-aa8b-6c49cbe998cf",
+  "collection": "contentId-6838190156",
+  "title": "dp-TTR-flow.png",
+  "attId": "att6838222991"
+ },
+ "TYT": {
+  "page": "6837338250",
+  "fileId": "326145a8-a80b-45a5-9e5f-2a22dce345cb",
+  "collection": "contentId-6837338250",
+  "title": "dp-TYT-flow.png",
+  "attId": "att6837666049"
+ },
+ "ai-workflow": {
+  "page": "6837665931",
+  "fileId": "a21fe488-8d9c-48f8-83f5-8fec82095270",
+  "collection": "contentId-6837665931",
+  "title": "ai-workflow.png",
+  "attId": "att6837862510"
+ }
+}

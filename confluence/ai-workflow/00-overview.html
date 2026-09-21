@@ -1,0 +1,83 @@
+<div data-type="panel-info"><p>Entry page for a series on using an AI coding agent (Claude Code) as a working member of the APAC Aspire Digital team. Each step of the delivery workflow gets its own page, written from what we actually run day to day on the RSA / Benefit / Vendor projects — not from vendor marketing.</p></div>
+
+<p>Last updated <time datetime="2026-09-21">21 Sep 2026</time> · Owner: Hoang Quach · Status: <span data-type="status" data-color="blue">Living document</span></p>
+
+<h2>Why this series exists</h2>
+<p>An AI agent is only useful when it has the same context a developer has: the ticket, the code, the database, the CMS, the logs, the deployment pipeline. Given that context it can fetch a ticket, trace a bug across four repositories, verify a hypothesis against UAT data, write the fix, drive a browser to test it and draft the release note. Without that context it guesses — confidently.</p>
+<p>The series documents how we give the agent that context and how we keep it on a leash: what it may read on its own, what it must ask before doing, and how we check its work.</p>
+
+<h2>The workflow at a glance</h2>
+<p>Solid arrows are what the agent does on its own; the circles and the diamond are the points where a human decides — reviewing the task file, answering the BA questions, approving the production tag.</p>
+<figure data-type="media-single" data-layout="center" data-width="70" data-width-type="percentage"><div data-type="media" data-media-type="file" data-id="a21fe488-8d9c-48f8-83f5-8fec82095270" data-collection="contentId-6837665931" data-alt="ai-workflow.png"></div></figure><details><summary>Diagram source (Mermaid)</summary><pre><code class="language-text">flowchart TB
+  subgraph S0[0 · Connect]
+    direction LR
+    MCP[Claude Code + MCP&lt;br/&gt;Jira · Confluence · Playwright]
+    CLI[CLI tools&lt;br/&gt;git · aws · sqlcmd/mysql · twg]
+  end
+  subgraph S1[1 · Fetch]
+    direction LR
+    J[(Jira ticket&lt;br/&gt;ABE-xxxx)] --&gt; TF[issues/ABE-xxxx.md&lt;br/&gt;context · goal · requirements · AC · comments]
+  end
+  subgraph S2[2 · Analyse]
+    direction LR
+    CODE[code touchpoints&lt;br/&gt;file:line] --&gt; AN[Analysis section&lt;br/&gt;root cause · facts measured · blast radius · plan]
+    DATA[(UAT / PROD read-only&lt;br/&gt;CMS · CloudWatch)] --&gt; AN
+    AN --&gt; Q{questions&lt;br/&gt;for BA / QA}
+  end
+  subgraph S3[3 · Implement and Verify]
+    direction LR
+    BR[feature branch&lt;br/&gt;build · unit tests] --&gt; EV[evidence&lt;br/&gt;Playwright screenshots · DB before/after · logs]
+  end
+  subgraph S4[4 · Review and Release]
+    direction LR
+    PR[PR + AI review&lt;br/&gt;fresh session] --&gt; REL[release page&lt;br/&gt;scripts · order · rollback]
+    REL --&gt; TAG{human approves&lt;br/&gt;tag prod/YYYYMMDD_NN}
+  end
+  S0 --&gt; S1 --&gt; H1((human reviews&lt;br/&gt;the task file)) --&gt; S2 --&gt; S3 --&gt; S4
+  Q -.-&gt; R2((BA answers)) -.-&gt; S3
+  TAG -.-&gt; DEP[CodePipeline deploy&lt;br/&gt;post-deploy checks recorded]
+</code></pre></details>
+<table data-layout="default">
+<thead><tr><th>Step</th><th>What happens</th><th>Input → Output</th><th>Page</th></tr></thead>
+<tbody>
+<tr><td><strong>0. Connect</strong></td><td>Wire the agent to Jira, Confluence, Bitbucket, the browser, CloudWatch and the databases through MCP servers and CLI tools.</td><td>Accounts, tokens → a <code>claude mcp list</code> that is all green</td><td>1. MCP Connect</td></tr>
+<tr><td><strong>1. Fetch</strong></td><td>Pull a Jira ticket (description, comments, links, parent) into a local task file that becomes the single source of truth for the session.</td><td><code>ABE-5457</code> → <code>issues/ABE-5457.md</code></td><td>2. Task Fetch</td></tr>
+<tr><td><strong>2. Analyse</strong></td><td>Trace the ticket through code, data and logs; find the root cause or design; measure blast radius; list open questions before any code is written.</td><td>Task file → Analysis section + Jira comment for the BA</td><td>3. Task Analysis</td></tr>
+<tr><td><strong>3. Implement &amp; Verify</strong></td><td>Execute the plan on a feature branch following repo conventions; build; unit tests; then prove it in a real browser and the real database.</td><td>Plan → diff + evidence</td><td>4. Implement &amp; Verify</td></tr>
+<tr><td><strong>4. Review &amp; Release</strong></td><td>PR description, AI code review, release notes, deployment runbook, rollback evidence.</td><td>Evidence → PR + release page</td><td>5. Review &amp; Release</td></tr>
+</tbody></table>
+
+<div data-type="panel-success"><p><strong>Start with the example if the process pages feel abstract:</strong> <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837895252">Worked example — Sprint 70: 11 data-processor clients in one session</a>. Two prompts, 48 minutes, 12 commits, one latent prod bug caught before push — with the real timestamps and the real findings.</p></div>
+
+<h2>The toolset we use</h2>
+<table data-layout="default">
+<thead><tr><th>Tool</th><th>Role</th><th>Connection</th></tr></thead>
+<tbody>
+<tr><td>Claude Code (CLI, v2.1)</td><td>The agent. Runs in the terminal inside the repo checkout; has file, shell and browser tools.</td><td>Local install, company account</td></tr>
+<tr><td>Atlassian MCP (Jira + Confluence)</td><td>Read tickets, comments, links; search Confluence; comment on issues.</td><td><code>https://mcp.atlassian.com/v1/mcp</code>, OAuth as the developer</td></tr>
+<tr><td>TWG CLI (Atlassian)</td><td>Same data plus Confluence page create/update, hierarchy and Bitbucket PR reads — used where the MCP is read-only.</td><td><code>twg</code> command, OAuth as the developer</td></tr>
+<tr><td>Bitbucket</td><td>Branches, PRs, pipelines.</td><td>git over HTTPS with an app password; REST via <code>curl</code> when needed</td></tr>
+<tr><td>Playwright MCP</td><td>Drives a real browser against SIT/UAT for verification and for the e2e regression suite.</td><td><code>npx @playwright/mcp@latest</code> (local process)</td></tr>
+<tr><td>Databases (SQL Server / MySQL)</td><td>Read-only verification of hypotheses against UAT and (SELECT-only) prod.</td><td><code>sqlcmd</code> / <code>mysql</code> through SSH tunnels; credentials from AWS Secrets Manager</td></tr>
+<tr><td>Kontent.ai Delivery API</td><td>Read CMS content types and items the apps depend on.</td><td>Public Delivery API per environment id</td></tr>
+<tr><td>AWS CLI</td><td>CloudWatch Logs (application + Lambda log groups, Logs Insights queries), Parameter Store config, CodePipeline state, Secrets Manager.</td><td>SSO profile</td></tr>
+</tbody></table>
+
+<h2>Ground rules</h2>
+<ul>
+<li><strong>The agent acts as you.</strong> Every MCP call is made with your OAuth token, every commit with your git identity. Nothing it does is anonymous, so review what it writes before it leaves your machine.</li>
+<li><strong>Read freely, write with permission.</strong> Reading Jira, Confluence, code and SELECT-ing from a database is auto-allowed. Comments, transitions, page updates, INSERT/UPDATE, pushes and deployments are permission-prompted every time.</li>
+<li><strong>Files over chat.</strong> Anything worth keeping — the task file, the analysis, the verification evidence — is written to disk (and later to Confluence), never left in the conversation window. Conversations get compacted; files do not.</li>
+<li><strong>Cite, don't assert.</strong> Claims about code carry <code>file:line</code>; claims about data carry the query and the row count; figures are tagged <code>[measured]</code> or <code>[assumption]</code>.</li>
+<li><strong>The BA/QA still decides.</strong> The agent surfaces options and blast radius; it does not decide business rules (e.g. whether 317 providers get back-filled). Those go to the ticket as a question.</li>
+</ul>
+
+<h2>Series index</h2>
+<p><span data-type="inline-extension" data-extension-key="children" data-extension-type="com.atlassian.confluence.macro.core" data-parameters='{"macroParams":{"all":{"value":"true"},"depth":{"value":"2"}},"macroMetadata":{"schemaVersion":{"value":"2"},"title":"Child pages"}}'>Child pages</span></p>
+
+<h2>Related pages</h2>
+<ul>
+<li><a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6772031506/Web+Automation+testing+by+Playwright+and+AI" data-card-appearance="inline"></a></li>
+<li><a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6794248265/RoadSide+WebApp+end-to-end+regression+suite" data-card-appearance="inline"></a></li>
+<li><a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6767804500/RSA+Production+CI+CD+Automated+Deployments+Downtime+and+Rollback+Evidence" data-card-appearance="inline"></a></li>
+</ul>

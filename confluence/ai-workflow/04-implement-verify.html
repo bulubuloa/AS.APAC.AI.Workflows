@@ -1,0 +1,89 @@
+<p>Part 4 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> the plan from Part 3 becomes a diff on a feature branch that builds, passes tests, and is <em>seen working</em> — in a real browser on SIT/UAT and in the database — before anyone is asked to review it. The evidence goes into the task file under <code>## Implementation</code> and <code>## Verification</code>.</p></div>
+
+<h2>1. Three ways to run it</h2>
+<p>The same implementation steps run under three levels of autonomy. Pick by how well the plan is understood and how visible the change is.</p>
+<table data-layout="default">
+<thead><tr><th>Mode</th><th>When</th><th>Agent asks…</th><th>Stops at</th></tr></thead>
+<tbody>
+<tr><td><strong>Process</strong> (default)</td><td>Normal ticket, plan reviewed</td><td>1–3 clarifying questions up front, then none</td><td>Pushed branch + PR, CI green</td></tr>
+<tr><td><strong>Co-work</strong></td><td>UI-heavy change, or a screen the agent cannot reach (SSO, credentials)</td><td>Hands over for manual testing; asks before every commit</td><td>Your explicit "commit" and "open PR"</td></tr>
+<tr><td><strong>Auto</strong></td><td>Small, well-specified fix; you are away</td><td>Nothing — records every judgement call in the PR body</td><td>Pushed branch + PR, CI green, or a true blocker</td></tr>
+</tbody></table>
+<p>Whatever the mode, the agent never merges. Merging and deploying are Part 5 and are human actions.</p>
+
+<h2>2. Implementation rules the agent follows</h2>
+<ul>
+<li><strong>Branch first — from the branch that feeds the first test environment</strong>, which for ABCB/ABF/ABVB is <code>develop</code> (SIT), not <code>main</code>. The PR goes to <code>develop</code>; QA tests on SIT; promotion to <code>staging</code> and <code>main</code> follows (see table below), named <code>feature/ABE-xxxx-short-slug</code> or, for a release train, <code>release/uat/ABE-xxxx-…</code>. Sub-tasks stack commits on the parent's branch; no second PR.</li>
+<li><strong>Match the codebase, not the textbook.</strong> Existing patterns win: the same controller style, the same SQL helper, the same Kontent client. New abstractions are a question for the reviewer, not a unilateral decision.</li>
+<li><strong>Additive schema only.</strong> New columns nullable or defaulted, widening not narrowing, stored-procedure changes with <code>CREATE OR ALTER</code>. Scripts land in <code>DatabaseScript/&lt;Release&gt;/</code> with a header stating env, order and rollback. A script that is not idempotent does not ship.</li>
+<li><strong>Build and test before showing anything.</strong> <code>dotnet build</code> / <code>msbuild</code> for the .NET projects, <code>npm run build</code> + lint for the front end, the unit tests for the touched area. A red build is fixed by the agent, not reported.</li>
+<li><strong>Stage what you changed.</strong> <code>git add &lt;files&gt;</code>, never <code>git add -A</code>. Data files, dumps, screenshots and <code>.codex</code>/<code>.claude</code> local config never enter a product repo (the 28 Aug release had to strip exactly that).</li>
+<li><strong>Commit message = <code>ABE-xxxx Short imperative summary</code></strong>, one line, no body, no AI co-author trailer. One commit per logical change; umbrella tickets get one commit per listed issue so a bad one reverts alone.</li>
+<li><strong>Comments say why, not what</strong>, one line, ticket ID inline (<code>// ABE-5457 Ver2 sync must carry the mobile flag</code>).</li>
+<li><strong>Secrets never appear in the diff.</strong> Config goes to Parameter Store / Secrets Manager; the agent reads them with <code>aws ssm get-parameter</code> and writes only the key name into code.</li>
+</ul>
+<table data-layout="default">
+<thead><tr><th>Repo</th><th>SIT branch</th><th>UAT branch</th><th>PROD branch</th><th>Deploys on</th></tr></thead>
+<tbody>
+<tr><td>ABMB RoadSide backend</td><td><code>roadside_release_sit</code></td><td><code>roadside-release-uat</code></td><td><code>roadside-release-production</code></td><td>Push (SIT/UAT); tag <code>prod/YYYYMMDD_NN</code> + approval (PROD)</td></tr>
+<tr><td>ABVB vendor backend</td><td><code>develop</code></td><td><code>staging</code></td><td><code>main</code></td><td>Push / tag</td></tr>
+<tr><td>ABF benefit frontend</td><td><code>develop</code></td><td><code>staging</code></td><td><code>main</code></td><td>Push / tag</td></tr>
+<tr><td>ABCB client backend — <code>ClientService.API</code> (Lambda, CodePipeline)</td><td><code>develop</code> → <code>apac-benefit-client-backend-sit</code></td><td><code>staging</code> → <code>…-uat</code></td><td><code>main</code> → <code>…-prod</code></td><td>Push to branch (verified from the pipeline source stages, 21 Sep 2026)</td></tr><tr><td>ABCB client backend — DataProcesser (Batch image)</td><td>—</td><td><code>data-processer-pre-production</code> (UAT job defs)</td><td><code>data-processer-production</code></td><td>Manual image push + job-def revision (see the Data Processors pages)</td></tr>
+</tbody></table>
+
+<h2>3. Verification — the part that is not optional</h2>
+<p>"It compiles" is not evidence. Every change with a visible surface is exercised the way a QA engineer would exercise it, and the agent looks at the result — screenshot, DOM snapshot, query output — rather than assuming.</p>
+
+<h3>3.1 Browser (Playwright MCP)</h3>
+<ol>
+<li>Navigate to the SIT/UAT screen; log in with the shared UAT agent account (never a personal prod account).</li>
+<li>Reproduce the <em>before</em> state if the fix is not yet deployed there — that becomes the baseline screenshot.</li>
+<li>Deploy the branch to SIT (push) or run the app locally against UAT data.</li>
+<li>Drive the exact path in the acceptance criteria: fill, click, wait, <code>browser_snapshot</code>, <code>browser_take_screenshot</code>. Read the network requests when the UI hides an error.</li>
+<li>Save screenshots as <code>issues/&lt;KEY&gt;-&lt;step&gt;.png</code> and reference them in the task file.</li>
+</ol>
+<p>For regression on RSA, the agent can run the Playwright e2e suite (449 cases across 22 feature sheets) or the subset tagged for the touched area; see <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6794248265/RoadSide+WebApp+end-to-end+regression+suite" data-card-appearance="inline"></a>. A failing case that pre-dates the change is reported, not "fixed" by editing the test.</p>
+
+<h3>3.2 Database</h3>
+<p>The same read-only queries from the analysis, re-run after the change, with before/after counts side by side. A fix that changes data through a sync or a script must show the row count it touched on UAT and the count it <em>would</em> touch on prod.</p>
+
+<h3>3.3 Logs</h3>
+<p><code>aws logs filter-log-events</code> on the SIT/UAT log group for the minute the test ran: no new exceptions, the expected info line present. For Lambda-based sync (ABVB), the invocation log for the run that carried the test vendor.</p>
+
+<h3>3.4 What goes into the task file</h3>
+<pre><code class="language-markdown">## Implementation
+Branch: feature/ABE-5457-sync-mobile-flag (ABMB), feature/ABE-5457-mobile-flag (ABVB)
+Commits: 1a2b3c4 ABE-5457 Carry isProviderMobile in Ver2 vendor sync · …
+Files: RoadSide/…/ProviderSyncBenefitController.cs:512 · VendorServerless.Shared/Requests/ProviderRoadside.cs:38
+Decisions: mapped null CMS value to "no change" rather than false (BA question #1 still open)
+
+## Verification
+| Check | How | Result | Evidence |
+|---|---|---|---|
+| Sync writes flag | Re-save vendor 2-0938 in ABF UAT, query cloud.UserAccount | isProviderMobile 0 → 1 | query + rows in file |
+| Auto-mode autocomplete | Playwright: job 26JB067586, mode A, type "Asia Lue" | provider listed | issues/ABE-5457-auto.png |
+| Manual mode unchanged | same, mode M | provider listed | issues/ABE-5457-manual.png |
+| No new errors | aws logs filter-log-events --log-group roadside-uat --start-time … | 0 ERROR | — |
+| e2e subset | npm run test -- --grep @dispatch | 31/31 pass | report link |
+Not verified: prod back-fill (blocked on BA answer).</code></pre>
+
+<h2>4. When the agent cannot verify</h2>
+<ul>
+<li>Screen behind Azure AD SSO → Chrome extension tools on your logged-in session, or you check that one screen and the agent records what you saw.</li>
+<li>No SIT for the repo (ABCB) → local run against UAT data with the exact input file; the run log is the evidence.</li>
+<li>Behaviour only reproducible in prod → do not test in prod. Reproduce the data condition on UAT with a SELECT-driven copy, and state in the PR that prod was not exercised.</li>
+<li>Cap: ~5 fix–rebuild–screenshot cycles on one issue. After that the agent surfaces the latest screenshot and its diagnosis instead of looping.</li>
+</ul>
+
+<h2>5. Guardrails</h2>
+<ul>
+<li>No writes to prod — code, data or config — from this step. Ever.</li>
+<li>UAT writes only through the application or a reviewed script, never ad-hoc <code>UPDATE</code>s "to make the test pass".</li>
+<li>A test the agent edits to pass is a finding, not a fix. It goes in the PR body under <em>Decisions</em>.</li>
+<li>Screenshots and logs from UAT may contain test-customer data; they stay in <code>issues/</code>, not in the repo and not in the PR.</li>
+</ul>
+
+<h2>Next</h2>
+<p><strong>5. Review &amp; Release</strong> — the PR, the AI-assisted review, the release page, the tag and the rollback evidence.</p>

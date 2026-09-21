@@ -1,0 +1,69 @@
+<p>Second worked example for <em>AI in the Development Workflow</em> — a small, ordinary ticket, so the shape of each step is easy to see. Session of <time datetime="2026-09-21">21 Sep 2026</time>, repositories ABCB (<code>apac-benefit-client-backend</code>) and ABF (<code>apac-benefits-frontend</code>), both on <code>develop</code> — the branch that feeds the <strong>SIT</strong> pipelines (<code>staging</code> = UAT, <code>main</code> = PROD). Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>What this page is.</strong> One Critical story, <a href="https://internationalsos.atlassian.net/browse/ABE-5461">ABE-5461 Payment Report – Display and Search by Job ID</a>, taken from Jira to two committed branches in about twenty minutes with one prompt. Every artefact on this page exists: the task file <code>issues/ABE-5461.md</code>, the commits, the SQL script, the numbers. Compare with the <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837895252">Sprint 70 example</a> for the other end of the scale.</p></div>
+
+<h2>1. The prompt</h2>
+<blockquote><p>"please going with other example, the ticket ABE-5461"</p></blockquote>
+<p>Nothing else — no repo names, no hint where the report lives. The agent had the connections from Part 1 and the memory notes from earlier tickets; the rest it had to find.</p>
+
+<h2>2. Fetch (Part 2) — 1 minute</h2>
+<p><code>getJiraIssue</code> + a JQL fetch for comments, links, attachments, parent and sub-tasks: none of them. A clean ticket with three numbered acceptance sections. The task file <code>issues/ABE-5461.md</code> was written from the template: the story verbatim, a one-line Goal, six Requirements (one tagged <em>inferred</em>), six checkbox acceptance criteria, an inferred Out-of-scope, and two <strong>open questions</strong> that the analysis then answered:</p>
+<ul><li><p>Is "fulfilled through the RSA Platform" a stored attribute, or implied by the job link?</p></li><li><p>Is "Job ID" the RSA job number the popup shows, or an internal id?</p></li></ul>
+
+<h2>3. Analysis (Part 3) — 12 minutes</h2>
+<h3>3.1 Locating the code</h3>
+<table data-width="760"><thead><tr><th><p>Question</p></th><th><p>Answer, with the file that proves it</p></th></tr></thead><tbody>
+<tr><td><p>Which screen is "Payment Report → Report Details"?</p></td><td><p>ABF <code>Pages/Reports/Finance/FinanceBreakdownReport.razor</code> (report name <code>FinancePayment</code>) — found by grepping the label "Case Number" the ticket mentions</p></td></tr>
+<tr><td><p>Where does the data come from?</p></td><td><p><code>GET api/clients/report/get-detailed-payment-report</code> → <code>ReportService.GetDetailedFinanceReport</code> → MySQL stored procedure <code>Benefit_SP_GenerateDetailedFinanceReport</code>; Excel/CSV/Text use the same call</p></td></tr>
+<tr><td><p>Which repo holds that API?</p></td><td><p>Same repository as the data processors, but the <code>ClientService.API</code> project only exists on <code>develop</code> — the data-processor branches strip it. A second checkout (<code>Omnicasa.Mobile.ABCB.Clone</code>) on <code>develop</code> is where the change goes</p></td></tr>
+<tr><td><p>What does the View Redemption popup show as Job ID?</p></td><td><p><code>CustomerRedemptionDetail.razor:133</code> → <code>roadSideResponse.JobId</code> ← <code>customer_redeemed_privileges.RoadSideJobId</code> (<code>CustomerPrivilegeInventoryService.cs:965</code>). One column, so on-screen, Excel and popup agree by construction</p></td></tr>
+<tr><td><p>What is "Redemption Mode = Fulfillment"?</p></td><td><p><code>privileges.IsSpecificBookingRequired</code> — <code>PrivilegeV3Service.cs:185</code> exposes it as <code>RedemptionModeIsFullfillment</code></p></td></tr>
+<tr><td><p>What is "fulfilled through the RSA platform"?</p></td><td><p>No column. <code>RoadSideJobId</code> is written only by the RSA redemption endpoints (<code>PrivilegeService.cs:4380, :5153, :12019</code>), so a non-null value <em>is</em> the marker</p></td></tr>
+</tbody></table>
+
+<h3>3.2 Verifying against data (read-only, UAT and PROD)</h3>
+<table data-width="760"><thead><tr><th><p>Fact</p></th><th><p>Value</p></th></tr></thead><tbody>
+<tr><td><p>PROD redemptions carrying a job id</p></td><td><p>135,701 of 235,993 — all but one on Fulfillment privileges (that one is cancelled)</p></td></tr>
+<tr><td><p>Job id shape</p></td><td><p>135,700 are 10 characters (<code>26JB…</code>); one is 4, one is 18; one is lower-case → the filter must be case-insensitive, as the ticket says</p></td></tr>
+<tr><td><p>Column collation</p></td><td><p><code>utf8mb3_general_ci</code> → <code>LIKE</code> already ignores case; no <code>UPPER()</code> needed</p></td></tr>
+<tr><td><p>Stored procedure, repo vs live</p></td><td><p><code>SHOW CREATE PROCEDURE</code> on both environments: the repo file <code>…sp_2.sql</code> equals <strong>UAT</strong>; <strong>PROD differs</strong> — inner joins where UAT has <code>LEFT JOIN</code>, and <code>Status NOT IN (4,3,6)</code> where UAT has <code>(4,6)</code></p></td></tr>
+</tbody></table>
+<p>The last row is the finding that matters. Without the diff, the "obvious" script — take the repo file, add a column — would have silently changed which rows the production report returns. It became a question for the BA and a warning in the script header instead.</p>
+
+<h3>3.3 Blast radius</h3>
+<ul>
+<li><p>🟠 The Excel column headers come from <code>ImportExportHeader.BreakdownFinance.Header</code>, an ordered list <strong>shared with a legacy export</strong> in <code>PrivilegeService</code> that is still reachable from ABF. Renumbering orders 7–42 to slot Job ID in at 7 would have shifted that export's columns. Decision: add <code>JobId</code> as order 43 and insert it <em>by position</em> in the new export's mapper — the dictionary's insertion order is what drives the columns.</p></li>
+<li><p>🟢 Four other reports (Corporate, Unpaid, Unscheduled, Fourth-night) call the same procedure through the one method; the new parameter defaults to NULL for them and the extra column is ignored.</p></li>
+<li><p>🟢 The popup is untouched.</p></li>
+</ul>
+<p>All of this went into the task file under <code>## Analysis</code> — understanding, facts table with <code>[measured]</code> tags, design, blast radius, two questions for the BA, plan — before any code changed.</p>
+
+<h2>4. Implement (Part 4) — 7 minutes</h2>
+<table data-width="760"><thead><tr><th><p>Repo</p></th><th><p>Commit</p></th><th><p>Change</p></th></tr></thead><tbody>
+<tr><td><p>ABCB <code>jira/ABE-5461-payment-report-jobid</code> (off <code>develop</code>)</p></td><td><p><code>9c1cd97c2</code></p></td><td><p><code>database/Sprint70/ABE-5461_…_JobId.sql</code>: last parameter <code>jobId</code>, <code>LEFT JOIN privileges</code>, <code>JobId</code> column only when <code>IsSpecificBookingRequired = 1</code>, <code>LIKE CONCAT('%', jobId, '%')</code> filter, header naming the UAT/PROD drift and the rollback file. <code>PaymentReportRequest.JobId</code> (trimmed → null), <code>@jobId</code> bound, reader, response, Excel mapper after CaseNumber, Text/CSV header + value. 5 files, +235.</p></td></tr>
+<tr><td><p>ABF <code>jira/ABE-5461-payment-report-jobid</code> (off <code>develop</code>)</p></td><td><p><code>8290dfa7c</code></p></td><td><p>Job ID text field between Case Number and Payment Mode; <code>&lt;MudTh&gt;/&lt;MudTd&gt;</code> after Case Id Number; <code>JobId?.Trim()</code> in both request builders; <code>&amp;jobId=</code> on both endpoints. 4 files, +16.</p></td></tr>
+</tbody></table>
+<p>Both projects build with 0 errors. Commit messages follow <code>ABE-xxxx Imperative summary</code>; comments carry the ticket id inline.</p><div data-type="panel-warning"><p><strong>A mistake, caught by the developer:</strong> the first ABF branch was cut from <code>main</code>. The developer asked "should be PR to develop/SIT for testing first?" — and yes: for ABCB and ABF the flow is <code>develop</code> (SIT) → <code>staging</code> (UAT) → <code>main</code> (PROD), confirmed from the CodePipeline source branches (<code>apac-benefit-client-backend-sit</code> ← develop, <code>…-uat</code> ← staging). The branch was re-cut from <code>develop</code> and the commit cherry-picked; the API branch was rebased onto the 16 newer develop commits. The data-processor side of the same repo deploys from other branches, which is exactly the kind of thing that belongs on the client pages, not in one person's head — it is on the Overview now.</p></div><p>Checking the SIT database while at it (<code>Aspire</code> on the benefit-sit cluster, same tunnel as UAT): its procedure is UAT's plus two empty-string guards, so the script was made a superset of both.</p>
+
+<h2>5. Verify (Part 4) — what was proven, what was not</h2>
+<p>The stored procedure could not be applied to SIT or UAT by the agent (a write to a shared environment), so the new body was run as a plain <code>SELECT</code> against UAT with the parameters substituted — read-only, same SQL:</p>
+<table data-width="760"><thead><tr><th><p>Filter value</p></th><th><p>Rows</p></th><th><p>Meaning</p></th></tr></thead><tbody>
+<tr><td><p>NULL / blank</p></td><td><p>618 (82 with a Job ID)</p></td><td><p>blank = no filtering ✔</p></td></tr>
+<tr><td><p><code>23JC100353</code></p></td><td><p>1</p></td><td><p>exact ✔</p></td></tr>
+<tr><td><p><code>23jc100353</code></p></td><td><p>1</p></td><td><p>case-insensitive ✔</p></td></tr>
+<tr><td><p><code>100353</code>, <code>JC1</code></p></td><td><p>1 each</p></td><td><p>partial, middle ✔</p></td></tr>
+<tr><td><p><code>23</code></p></td><td><p>6, all with a Job ID</p></td><td><p>partial, broad ✔</p></td></tr>
+<tr><td><p><code>ZZZ</code></p></td><td><p>0</p></td><td><p>no match ✔</p></td></tr>
+<tr><td><p>rows with a job id on a non-Fulfillment privilege</p></td><td><p>3, Job ID blank</p></td><td><p>eligibility rule ✔</p></td></tr>
+</tbody></table>
+<p><strong>Not verified:</strong> the grid, the filter box and the Excel file in a browser. That needs the script applied on SIT and the branch merged to <code>develop</code> so the SIT pipeline deploys it; the Playwright pass then follows the acceptance criteria in the task file. SIT has 1,872 redemptions with a job id to test against.</p>
+
+<h2>6. What the developer does next</h2><ol><li><p>Push both branches and open the PRs to <code>develop</code> (the agent's shell has no Bitbucket credential — its push was refused, which is the right default).</p></li><li><p>Apply the SP script on the SIT database (command in the task file), let the SIT pipeline deploy the merge, check grid / filter / Excel / popup, attach screenshots to the ticket for QA.</p></li><li><p>Before <code>staging</code> and <code>main</code>: answer the two BA questions (keep PROD's two SP differences or adopt SIT/UAT's; Excel header <code>JobId</code> vs <code>Job ID</code>) and run the script on each database ahead of the deploy.</p></li><li><p>AI review of the PRs in a fresh session, then human review.</p></li></ol><h2>7. What this small ticket shows</h2>
+<ul>
+<li><p><strong>Analysis is not overhead, even for a two-file change.</strong> The two things a straight implementation would have got wrong — the drifted production procedure and the shared header list — were both found by verifying rather than assuming, in about ten minutes.</p></li>
+<li><p><strong>Read-only can prove most of it.</strong> The filter semantics were demonstrated on real UAT data without deploying anything.</p></li>
+<li><p><strong>The task file is the deliverable.</strong> By the end it holds the brief, the analysis with citations, the commits, the evidence table and the open questions — the PR description and the Jira comment are copied out of it.</p></li>
+<li><p><strong>Stopping points are explicit.</strong> No shared-DB writes, no push without credentials the developer chose to give; the page says exactly what is left.</p></li><li><p><strong>The developer's one question was worth more than the twenty minutes.</strong> "PR to develop/SIT first?" corrected a branch-base mistake that would have sent the change to the wrong environment. Process knowledge like this belongs in the docs so the next agent does not need the question.</p></li>
+</ul>
+
+<p>Back to the <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837665931">Overview</a>.</p>

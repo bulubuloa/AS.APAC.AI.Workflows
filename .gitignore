@@ -1,0 +1,5 @@
+.DS_Store
+*.bak-*
+confluence/**/pages/
+confluence/**/pngs.json
+confluence/**/png/

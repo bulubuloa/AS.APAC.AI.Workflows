@@ -1,0 +1,98 @@
+<p>Part 5 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> the verified branch becomes a reviewable PR, the PR becomes a documented release, and the release leaves behind the evidence an auditor or the next developer will ask for — what shipped, what scripts ran in what order, what was checked afterwards, and how to roll it back. The agent drafts every artefact; a human approves each gate.</p></div>
+
+<h2>1. Gates and who holds them</h2>
+<table data-layout="default">
+<thead><tr><th>Gate</th><th>Agent drafts</th><th>Human decides</th></tr></thead>
+<tbody>
+<tr><td>Pull request</td><td>Title, summary, decisions, test plan with evidence links</td><td>Developer opens it (or approves the agent opening it)</td></tr>
+<tr><td>Code review</td><td>First-pass review of the diff: bugs, missed touchpoints, convention drift</td><td>Reviewer reads both the diff and the agent's findings; approves</td></tr>
+<tr><td>Merge to UAT branch</td><td>Merge-order note when several features touch the same files</td><td>Developer merges</td></tr>
+<tr><td>UAT sign-off</td><td>QA checklist from the acceptance criteria; regression subset run</td><td>QA / BA signs off in Jira</td></tr>
+<tr><td>Release page</td><td>Release note, script run order, deploy order, post-deploy checks</td><td>Tech lead reviews</td></tr>
+<tr><td>Production tag + approval</td><td>Tag name, pipeline link, pre-deploy checklist status</td><td>Developer tags; approver clicks approve in CodePipeline</td></tr>
+<tr><td>Post-deploy verification</td><td>Runs the checks, records results and timings</td><td>Developer confirms; BA notified</td></tr>
+</tbody></table>
+
+<h2>2. The pull request</h2>
+<p>Bitbucket PR from the feature branch to the environment branch (Part 4 table). The agent writes the body from the task file — nothing in the PR should be new information.</p>
+<pre><code class="language-markdown">ABE-5457 Carry isProviderMobile in Ver2 vendor sync
+
+## Summary
+- Ver2 sync (ProviderSyncDataVer2) now maps isProviderMobile from the vendor request
+- ABVB request models carry the flag from the Kontent roadside module
+- No schema change; back-fill script provided separately, gated on BA decision
+
+## Decisions (please review)
+- null CMS value → leave RSA value unchanged (not false) — avoids un-flagging 274 migrated rows
+
+## Test plan
+- [x] UAT: re-save vendor 2-0938 → cloud.UserAccount.isProviderMobile 0→1 (query in issues/ABE-5457.md)
+- [x] UAT: Auto-mode autocomplete lists the provider (screenshot attached to Jira)
+- [x] UAT: Manual mode unchanged
+- [x] e2e @dispatch subset 31/31
+- [ ] Prod back-fill — not run, awaiting ABE-5457 comment from BA
+
+## Deploy notes
+Ship ABVB before ABMB; independent of the 28 Aug train.</code></pre>
+<ul>
+<li>Title = the commit-message convention: <code>ABE-xxxx Imperative summary</code>.</li>
+<li>Every test-plan box says <em>how</em> it was verified; unchecked boxes say why.</li>
+<li>Cross-repo features (ABF + ABVB + ABMB) get three PRs that link each other and a "ship together" line.</li>
+</ul>
+
+<h2>3. AI-assisted code review</h2>
+<p>Before the human reviewer opens the PR, the agent reviews it — in a <em>fresh session</em>, without the context of having written it, so it reads the diff the way a stranger would. Claude Code's <code>/code-review</code> does this against the current branch or a PR; <code>/security-review</code> runs the OWASP-style pass on the pending changes.</p>
+<p>What we ask it to look for, in order:</p>
+<ol>
+<li><strong>Correctness</strong> — null paths, off-by-one in date ranges, SQL that ignores <code>isDelete</code>/<code>active</code>, EF queries that will N+1, exceptions swallowed in sync loops.</li>
+<li><strong>Missed touchpoints</strong> — the blast-radius table from Part 3 is the checklist: every 🔴/🟠 row must be either changed or explicitly left alone in the PR body.</li>
+<li><strong>Convention drift</strong> — new patterns where an existing helper exists; comments that explain <em>what</em>; magic strings that belong in the CMS or config.</li>
+<li><strong>Security</strong> — input reaching SQL or file paths, secrets in config, new endpoints without the existing auth attribute, PII in logs.</li>
+<li><strong>Migration safety</strong> — script idempotency, run order, prod-only vs preprod-only headers, the <code>@EffectiveDate</code>-style parameter drift that bit the announcement SPs.</li>
+</ol>
+<p>Findings are posted as PR comments <em>by the developer</em> after reading them, not by the agent directly. A finding the developer disagrees with is answered in the PR thread, so the reasoning is on record.</p>
+<div data-type="panel-note"><p>The AI review does not replace the human one. It removes the mechanical findings so the reviewer's time goes to design and business logic. A PR that arrives with zero AI findings and zero human findings is a signal to look harder, not to merge faster.</p></div>
+
+<h2>4. Release documentation</h2>
+<p>For each production release the agent drafts a page under <em>RSA Releases</em> (or the equivalent for Benefit) from the task files of every ticket in the train. Structure, taken from the 28 Aug 2026 page:</p>
+<ol>
+<li><strong>Header</strong> — release date, branch → target per repo, tag, Jira fix version, ship-together rules.</li>
+<li><strong>Features</strong> — one paragraph per ticket, written for the BA, not the developer; links to the PRs.</li>
+<li><strong>Steps that need no source deploy</strong> — CMS content types/items to publish, DB scripts that are additive and can run ahead, Parameter Store keys, data repairs. Each with env, order and "done ✔ / pending".</li>
+<li><strong>Deploy order</strong> — numbered, cross-repo, with the tag command.</li>
+<li><strong>Post-deploy verification</strong> — concrete checks, each with what "pass" looks like.</li>
+<li><strong>Rollback</strong> — previous tag, scripts that are reversible vs not, snapshot name and PITR window.</li>
+</ol>
+<p>The Confluence release note for the Benefit system (e.g. <em>Release Note v21.01</em>) is drafted from the same source with the developer sections stripped. Both are published through the <code>twg</code> CLI (Part 1, §6) after review.</p>
+
+<h2>5. Production deploy and evidence</h2>
+<p>The RSA backend deploys through CodePipeline on a <code>prod/YYYYMMDD_NN</code> tag with a mandatory manual approval; the mechanics, downtime window and rollback evidence are on <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6767804500/RSA+Production+CI+CD+Automated+Deployments+Downtime+and+Rollback+Evidence" data-card-appearance="inline"></a>. The agent's role during the deploy:</p>
+<ul>
+<li>Before: confirm every "no source deploy" step is ticked; confirm the RDS snapshot exists (<code>aws rds describe-db-snapshots</code>); confirm the prod <code>Web.config</code>/Parameter Store keys the release needs are present.</li>
+<li>During: watch the pipeline (<code>aws codepipeline get-pipeline-state</code>) and the log group; report stage transitions as one-line status updates.</li>
+<li>After: run the post-deploy checks from the release page, with Playwright where they are UI checks and SQL where they are data checks; write results and timestamps into the release page; add the Jira comment that closes the loop for the BA (<code>addCommentToJiraIssue</code>, after you read it).</li>
+</ul>
+<p>The agent never clicks <em>Approve</em>, never pushes the tag on its own, and never runs a prod script. It prepares the command and the human runs it.</p>
+
+<h2>6. Closing the ticket</h2>
+<ul>
+<li>Jira: comment with the release tag, the verification result and any follow-up ticket (e.g. the back-fill). Transition is done by the developer or QA per the project's workflow.</li>
+<li>Task file: <code>## Release</code> section filled; the file is now the historical record and can be archived.</li>
+<li>Memory: anything non-obvious learned during the ticket (an environment quirk, a CMS gotcha, a script that must not be re-run) goes into the team's shared notes, not into one developer's head.</li>
+</ul>
+
+<h2>7. Metrics we actually track</h2>
+<table data-layout="default">
+<thead><tr><th>Metric</th><th>Why</th><th>Where it comes from</th></tr></thead>
+<tbody>
+<tr><td>Ticket → PR lead time</td><td>Does the workflow make delivery faster, or just busier?</td><td>Jira created → PR opened</td></tr>
+<tr><td>Findings per PR (AI vs human)</td><td>Is the AI review catching things, or noise?</td><td>PR comments tagged by source</td></tr>
+<tr><td>Post-release defects</td><td>The only number the BA cares about</td><td>Bugs linked to the fix version</td></tr>
+<tr><td>Verification coverage</td><td>Share of PRs with browser + DB evidence attached</td><td>Test-plan boxes with evidence links</td></tr>
+</tbody></table>
+<p>Figures tagged <code>[measured]</code> on any page in this series come from these sources; the arithmetic on cost or time saved is only as good as the tags say.</p>
+
+<h2>End of series</h2>
+<p>Back to the <a href="https://internationalsos.atlassian.net/wiki/spaces/AD/pages/6837665931">Overview</a>. Corrections and additions: comment on the page, or send a PR to the command files in <code>.claude/commands/</code>.</p>

@@ -1,0 +1,10 @@
+# apac-benefits-frontend (ABF) — Benefit admin UI
+
+- Blazor WebAssembly + MudBlazor. `src/Aspire.sln`; build `dotnet build src/Client/Aspire.Client.csproj`. Pages under `src/Client/Pages/`, shared models/requests/results under `src/Shared/`, API routes in `src/Shared/Constants/ApiEndpoints/ApiEndpoints.cs`, HTTP managers in `src/Shared/Managers/`.
+- Branches: `develop` (SIT, `api-benefit-sit`) → `staging` (UAT, `api-benefit-uat`) → `main` (PROD). Feature branches from `develop`; PR to `develop`.
+- The checked-in `wwwroot/appsettings.json` points at SIT; the real runtime config (SiteLoungePass, SiteLimo, Okta, feature flags) comes from the API's parameter-store endpoint = SSM `/abe/codepipeline/apac-benefit-frontend-<env>/APPSETTINGS_JSON` — change SSM, no redeploy. The S3 `appsettings.json` is dead (bucket policy denies it).
+- Permissions live only in the JWT (`CustomAuthenticationStateProvider.GetClaimsFromJwt`): a changed role matrix needs a re-login; the SignalR/refresh-token "regenerate" paths are dead code — do not resurrect them.
+- Reports: each Finance report page (`Pages/Reports/Finance/*.razor`) posts a `PaymentReportRequest`; the API resolves it to a stored procedure in ABCB — a new column/filter is a three-place change (SP + API + this page + Excel mapper in the API).
+- Labels use `_localizer["…"]` and fall back to the key when no resource entry exists (`src/Client/Resources/App.*.resx`); match the neighbours.
+- Data Processor Report page reads runs from the handback bucket through the API; the client dropdown is `api/clients/get-all-short-info` — a "missing client" means the client row does not exist in that environment's DB (SIT ≠ UAT).
+- Vendor module (Kontent.ai): adding a dynamic CMS module touches ABVB models/CmsService/constants + here `Shared/Models/KontentAI/Modules/*`, `VendorConstants.ModuleCodename` and the switch sites in `AddVer2.razor` / `EditUpdateVer2.razor` / `Detail.razor`. Category→module mapping is DB data (`category_module_mappings`).

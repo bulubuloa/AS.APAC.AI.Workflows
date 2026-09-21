@@ -1,0 +1,28 @@
+flowchart TB
+  subgraph S0[0 · Connect]
+    direction LR
+    MCP[Claude Code + MCP<br/>Jira · Confluence · Playwright]
+    CLI[CLI tools<br/>git · aws · sqlcmd/mysql · twg]
+  end
+  subgraph S1[1 · Fetch]
+    direction LR
+    J[(Jira ticket<br/>ABE-xxxx)] --> TF[issues/ABE-xxxx.md<br/>context · goal · requirements · AC · comments]
+  end
+  subgraph S2[2 · Analyse]
+    direction LR
+    CODE[code touchpoints<br/>file:line] --> AN[Analysis section<br/>root cause · facts measured · blast radius · plan]
+    DATA[(UAT / PROD read-only<br/>CMS · CloudWatch)] --> AN
+    AN --> Q{questions<br/>for BA / QA}
+  end
+  subgraph S3[3 · Implement and Verify]
+    direction LR
+    BR[feature branch<br/>build · unit tests] --> EV[evidence<br/>Playwright screenshots · DB before/after · logs]
+  end
+  subgraph S4[4 · Review and Release]
+    direction LR
+    PR[PR + AI review<br/>fresh session] --> REL[release page<br/>scripts · order · rollback]
+    REL --> TAG{human approves<br/>tag prod/YYYYMMDD_NN}
+  end
+  S0 --> S1 --> H1((human reviews<br/>the task file)) --> S2 --> S3 --> S4
+  Q -.-> R2((BA answers)) -.-> S3
+  TAG -.-> DEP[CodePipeline deploy<br/>post-deploy checks recorded]

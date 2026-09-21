@@ -1,0 +1,119 @@
+<p>Part 1 of <em>AI in the Development Workflow</em>. Last updated <time datetime="2026-09-21">21 Sep 2026</time>.</p>
+
+<div data-type="panel-info"><p><strong>Goal of this page:</strong> after following it, <code>claude mcp list</code> shows Jira/Confluence and Playwright connected, the agent can read an ABE ticket by key, and the permission model is set so reads are silent and writes always ask.</p></div>
+
+<h2>1. What MCP is, in one paragraph</h2>
+<p>MCP (Model Context Protocol) is the plug standard that lets an AI agent call external systems as <em>tools</em>. An MCP <em>server</em> exposes a set of named functions (e.g. <code>getJiraIssue</code>, <code>searchConfluenceUsingCql</code>, <code>browser_click</code>); the agent's <em>client</em> (Claude Code) lists them, decides when to call them, and shows you each call. The server runs either as a local process on your laptop (Playwright) or as a hosted HTTPS endpoint you authenticate to with OAuth (Atlassian). Nothing is shared between developers — each of us connects with our own account and the agent only sees what we can see.</p>
+
+<h2>2. Servers we use and why</h2>
+<table data-layout="default">
+<thead><tr><th>Server</th><th>Transport</th><th>What the agent gets</th><th>Typical use in our workflow</th></tr></thead>
+<tbody>
+<tr><td><strong>Atlassian</strong> (Jira + Confluence)</td><td>HTTP, OAuth</td><td>Read issues, comments, links, transitions; JQL and CQL search; <strong>add Jira comments</strong> (verified 21 Sep 2026 — 12 comments with @-mentions); read Confluence pages. <em>Confluence writes are disabled for our org on this endpoint — see §6.</em></td><td>Task fetch, reading linked specs, posting the analysis / QA hand-off comment</td></tr>
+<tr><td><strong>TWG CLI</strong> (Atlassian)</td><td>Local CLI, OAuth</td><td>Same reads plus Confluence page/folder create &amp; update, page tree, Jira transitions, Bitbucket PR reads.</td><td>Publishing pages like this one; hierarchy operations</td></tr>
+<tr><td><strong>Playwright</strong></td><td>stdio (local <code>npx</code>)</td><td>A real Chromium the agent can navigate, click, fill, screenshot and read network requests from.</td><td>Verifying a fix on SIT/UAT; reproducing a bug; running the RSA e2e suite</td></tr>
+<tr><td><strong>Chrome (claude-in-chrome)</strong></td><td>Browser extension</td><td>Drives tabs in your already-logged-in Chrome.</td><td>Screens behind SSO where Playwright has no session</td></tr>
+</tbody></table>
+<p>Databases, AWS (CloudWatch Logs, Parameter Store, CodePipeline) and Kontent are <em>not</em> MCP servers — the agent reaches them through ordinary CLI tools (<code>sqlcmd</code>, <code>mysql</code>, <code>aws</code>, <code>curl</code>) that are allow-listed in the permission settings (§5). That is deliberate: a CLI over an SSH tunnel is easier to audit and to restrict to read-only than a database MCP, and the AWS CLI already carries the SSO profile.</p>
+<div data-type="panel-note"><p>RSA, Benefit and Vendor do not use Sentry. Production errors live in CloudWatch Logs (application log groups and the <code>MobileRoadsideLogProxy</code> Lambda for the mobile app); the agent reads them with <code>aws logs filter-log-events</code> / <code>aws logs start-query</code> (Logs Insights). If a Sentry MCP shows up in <code>claude mcp list</code> on someone's laptop it is from another client's project and is not part of this workflow.</p></div>
+
+<h2>3. Install and connect</h2>
+<h3>3.1 Prerequisites</h3>
+<ul>
+<li>Claude Code ≥ 2.1 (<code>claude --version</code>), Node 20+ (for Playwright's <code>npx</code>).</li>
+<li>Your <code>@internationalsos.com</code> / Aspire Atlassian account with access to the ABE project and the AD space.</li>
+<li>TWG CLI installed at <code>~/.local/bin/twg</code> (add to <code>PATH</code>).</li>
+</ul>
+
+<h3>3.2 Add the servers (user scope, once per laptop)</h3>
+<pre><code class="language-bash"># Jira + Confluence — name it after the site so several Atlassian tenants can coexist
+claude mcp add --transport http -s user atlassian-isos https://mcp.atlassian.com/v1/mcp
+
+# Playwright (local browser)
+claude mcp add -s user playwright -- npx -y @playwright/mcp@latest
+
+# Check
+claude mcp list</code></pre>
+<p><code>-s user</code> stores the entry in <code>~/.claude.json</code> so it is available in every repo. Omit it to scope a server to one project (written to <code>.claude.json</code> under that project); use <code>.mcp.json</code> in the repo root only for servers the whole team should share via git — never for anything carrying a token.</p>
+
+<h3>3.3 Authenticate</h3>
+<ol>
+<li>Start <code>claude</code> in any repo and type <code>/mcp</code>.</li>
+<li>Select <code>atlassian-isos</code> → <em>Authenticate</em>. A browser opens on <code>id.atlassian.com</code>; approve for the <strong>internationalsos</strong> site.</li>
+<li>Back in the terminal the server shows <span data-type="status" data-color="green">connected</span>. Playwright needs no auth; it downloads Chromium on first use.</li>
+</ol>
+<div data-type="panel-note"><p>If you also work on another Atlassian tenant, add it as a second server with a different name (<code>atlassian-omnicasa</code> in our setup). Each server keeps its own OAuth token and its own tool prefix, so the agent can never confuse the two sites.</p></div>
+
+<h3>3.4 Smoke test</h3>
+<p>In a Claude session:</p>
+<blockquote><p>Read ABE-5457 and tell me its status, assignee and the last comment.</p></blockquote>
+<p>Expected: one call to <code>mcp__atlassian-isos__getJiraIssue</code>, then a plain answer. If the agent says the tool is unavailable, run <code>/mcp</code> and check the server state; if it gets a 401, re-authenticate.</p>
+
+<h2>4. How tools appear to the agent</h2>
+<p>Every MCP tool is named <code>mcp__&lt;server&gt;__&lt;tool&gt;</code>, e.g. <code>mcp__atlassian-isos__searchJiraIssuesUsingJql</code> or <code>mcp__playwright__browser_snapshot</code>. Claude Code keeps most of them <em>deferred</em> — only the name is loaded until the agent needs the schema — so having 150 tools connected does not cost context. You can see the full list with <code>/mcp</code> → server → <em>Tools</em>.</p>
+<p>The tools we lean on most:</p>
+<table data-layout="default">
+<thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>getJiraIssue</code></td><td>Full issue by key: summary, description (ADF/markdown), status, priority, labels, fix versions, parent, sub-tasks, issue links, comments.</td></tr>
+<tr><td><code>searchJiraIssuesUsingJql</code></td><td>"All open ABE bugs touching RSA", "tickets in fixVersion 28Aug2026".</td></tr>
+<tr><td><code>getJiraIssueRemoteIssueLinks</code></td><td>Confluence pages / external links attached to the issue.</td></tr>
+<tr><td><code>addCommentToJiraIssue</code></td><td>Post the analysis, a question to the BA, or the QA hand-off with @-mentions (<code>lookupJiraAccountId</code> for the ids). Permission-prompted.</td></tr>
+<tr><td><code>twg jira workitem transition</code> (CLI)</td><td>Move status (permission-prompted; we usually leave this to the human).</td></tr>
+<tr><td><code>getConfluencePage</code>, <code>searchConfluenceUsingCql</code></td><td>Read specs, runbooks, release notes referenced by the ticket.</td></tr>
+<tr><td><code>browser_navigate / _snapshot / _click / _take_screenshot</code></td><td>Playwright: reproduce and verify in a real browser.</td></tr>
+<tr><td><code>aws logs filter-log-events</code>, <code>aws logs start-query</code> (CLI, not MCP)</td><td>CloudWatch: find the exception behind a vague bug report; Logs Insights for counts over time.</td></tr>
+</tbody></table>
+
+<h2>5. Permissions — reads silent, writes ask</h2>
+<p>Claude Code asks before every tool call unless the call matches an allow rule. We allow-list <em>read-only</em> tools and CLI commands so the agent can investigate without interrupting, and leave every write prompted. Project-level rules live in <code>.claude/settings.json</code> (committed) and <code>.claude/settings.local.json</code> (personal, git-ignored).</p>
+<pre><code class="language-json">{
+  "permissions": {
+    "allow": [
+      "mcp__atlassian-isos__getJiraIssue",
+      "mcp__atlassian-isos__searchJiraIssuesUsingJql",
+      "mcp__atlassian-isos__getJiraIssueRemoteIssueLinks",
+      "mcp__atlassian-isos__getConfluencePage",
+      "mcp__atlassian-isos__searchConfluenceUsingCql",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(git log:*)", "Bash(git diff:*)", "Bash(git status:*)",
+      "Bash(sqlcmd:*)", "Bash(/opt/homebrew/opt/mysql-client/bin/mysql:*)",
+      "Bash(aws secretsmanager get-secret-value:*)",
+      "Bash(aws logs filter-log-events:*)", "Bash(aws logs start-query:*)", "Bash(aws logs get-query-results:*)",
+      "Bash(aws ssm get-parameter:*)",
+      "Bash(ssh:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(rm -rf:*)"
+    ]
+  }
+}</code></pre>
+<ul>
+<li><code>addCommentToJiraIssue</code>, <code>transitionJiraIssue</code>, every <code>twg … create/update</code>, <code>git push</code> and any SQL that is not a SELECT stay <strong>unlisted</strong> → prompted.</li>
+<li><code>sqlcmd</code>/<code>mysql</code> being allowed does <em>not</em> make writes silent by itself — we pair it with read-only DB logins (UAT) or explicit "SELECT only" instructions in the repo <code>CLAUDE.md</code> for prod. The tunnel user for prod has no write grants.</li>
+<li>Run <code>/permissions</code> inside a session to see what is currently allowed and where each rule comes from.</li>
+</ul>
+
+<h2>6. Known limits (found the hard way)</h2>
+<table data-layout="default">
+<thead><tr><th>Limit</th><th>Symptom</th><th>Work-around</th></tr></thead>
+<tbody>
+<tr><td>Atlassian MCP cannot write Confluence on our tenant (Jira comments work)</td><td><code>Access denied: Your organization admin has not authorized the write_confluence permission</code></td><td><code>twg confluence content create/update --body-file … --format html</code>. This page was published that way. Note: Jira writes were also blocked in Aug 2026 and were re-enabled later — if a write fails, check the scope before building a workaround.</td></tr>
+<tr><td>Atlassian MCP does not see Confluence <em>folders</em></td><td><code>Cannot find [page] entity with id …</code>; CQL <code>ancestor = &lt;folderId&gt;</code> returns 0</td><td><code>twg confluence content get &lt;folderId&gt;</code> / <code>twg confluence tree</code>, or pass page URLs directly.</td></tr>
+<tr><td>Jira attachments (screenshots) are not exposed as tool output</td><td>The agent sees the filename, not the image</td><td>Download the image and drop it in the <code>issues/</code> folder; the agent reads image files natively.</td></tr>
+<tr><td>Jira description arrives as ADF/markdown, tables lose merged cells</td><td>Requirement tables look flattened</td><td>Open the ticket in the browser for complex tables; the task file keeps the link.</td></tr>
+<tr><td>Playwright has no SSO session</td><td>Redirect loop on Azure AD-protected pages</td><td>Use the Chrome extension tools for those screens, or a UAT account with local login.</td></tr>
+<tr><td>Diagram macros (Mermaid Chart, draw.io, PlantUML) written through the API render empty</td><td>Empty box where the diagram should be</td><td>Render Mermaid → PNG (Playwright), upload as a page attachment with the Confluence REST API (personal API token), embed as an image; keep the Mermaid source in an expand. Recipe in ABCB <code>docs/data-processor/confluence/README.md</code>.</td></tr><tr><td>Hosted MCP tokens expire</td><td>Tools vanish mid-session or return 401</td><td><code>/mcp</code> → server → Re-authenticate. No restart needed.</td></tr>
+</tbody></table>
+
+<h2>7. Security notes</h2>
+<ul>
+<li>OAuth tokens are stored in the OS keychain by Claude Code; app passwords for Bitbucket live in git's credential helper. Neither should ever be pasted into a prompt or a settings file.</li>
+<li>The agent sends tool <em>results</em> to the model. Do not point it at production PII tables unless the ticket requires it, and prefer aggregate queries (<code>COUNT</code>, <code>GROUP BY</code>) over row dumps.</li>
+<li>Everything the agent posts to Jira/Confluence is attributed to you. Read it first.</li>
+</ul>
+
+<h2>Next</h2>
+<p>With the connections in place, go to <strong>2. Task Fetch</strong> — turning a ticket key into a working file.</p>
