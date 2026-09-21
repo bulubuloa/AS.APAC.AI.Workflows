@@ -12,7 +12,7 @@ warn() { printf '\033[1;33mwarn\033[0m %s\n' "$*"; }
 backup() { [ -e "$1" ] && [ ! -L "$1" ] && ! cmp -s "$1" "${2:-/dev/null}" && cp -a "$1" "$1.bak-$STAMP" && warn "backed up $1 → $1.bak-$STAMP" || true; }  # $2 = incoming file: no backup when identical
 
 # Claude Code keys project memory by the absolute path of the folder, with '/' replaced by '-'.
-slug() { printf '%s' "$1" | sed 's#/#-#g'; }
+slug() { printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g'; }  # Claude Code turns every non-alphanumeric character of the path into '-'
 
 say "workspace: $WS"
 [ -d "$WS" ] || { echo "workspace folder not found: $WS (set WORKSPACE=…)"; exit 1; }
@@ -38,7 +38,7 @@ for r in "$KIT"/workspace/repos/*/; do
     if [ -d "$dir" ]; then
       backup "$dir/CLAUDE.md" "$r/CLAUDE.md"; cp "$r/CLAUDE.md" "$dir/CLAUDE.md"; say "installed $dir/CLAUDE.md"
       # keep the instruction files out of the product repos' commits without touching their .gitignore
-      if [ -d "$dir/.git" ]; then for f in CLAUDE.md AGENTS.md "*.bak-*"; do grep -qx "$f" "$dir/.git/info/exclude" 2>/dev/null || echo "$f" >> "$dir/.git/info/exclude"; done; fi
+      if [ -d "$dir/.git" ]; then mkdir -p "$dir/.git/info"; for f in CLAUDE.md AGENTS.md "*.bak-*"; do grep -qx "$f" "$dir/.git/info/exclude" 2>/dev/null || echo "$f" >> "$dir/.git/info/exclude"; done; fi
     fi
   done
 done

@@ -52,6 +52,15 @@ aws sso login     # or configure the ap-southeast-1 profile you were given
 
 Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
 
+## Windows
+
+Two ways, both supported:
+
+- **WSL2 (recommended)** — install Ubuntu from the Store, clone the repos *inside* the WSL filesystem (`~/Projects/OmnicasaAS`, not `/mnt/c/...` — git and builds are far faster), install the tools with `apt`/`brew`-for-Linux, and run `./ai-workspace/bootstrap.sh` unchanged. Claude Code, Codex, twg, aws, dotnet, mysql-client, sqlcmd, Playwright and the SSH tunnels all work in WSL. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
+- **Native PowerShell** — `.\bootstrap.ps1` / `.\doctor.ps1` do the same as the shell scripts: memory and `issues/` become directory **junctions** (no admin rights needed), the project slug follows Claude Code's Windows rule (`C:\Users\me\Projects\OmnicasaAS` → `C--Users-me-Projects-OmnicasaAS`), the pre-commit guard runs under Git for Windows' bash + perl. Tools: `winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL`, `sqlcmd` from the Microsoft installer, twg's Windows installer (`%LOCALAPPDATA%\Programs\twg\bin\twg.exe` — add to PATH). Clipboard for the Atlassian token: `Get-Clipboard | Set-Content -NoNewline $env:USERPROFILE\.config\atlassian\token`. Tunnels: `ssh -N -L 3375:... user@bastion` in a PowerShell window, same ports.
+
+Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
+
 ## Codex CLI instead of Claude Code
 
 `bootstrap.sh` installs the Codex equivalents when `~/.codex` exists (or `WITH_CODEX=1`): `~/.codex/AGENTS.md` (global preferences), an `AGENTS.md` in the workspace and in each repo (workspace map + the Codex memory preamble + the repo instructions, because Codex reads `AGENTS.md` from the git root, not from parent folders), the six prompts in `~/.codex/prompts/`, and the MCP servers + trusted project in `~/.codex/config.toml`. Then `codex mcp login atlassian-isos`. Codex has no automatic project memory, so its `AGENTS.md` tells it to read `ai-workspace/memory/*/MEMORY.md` at the start of a session and to write notes at the end — the notes are the same files either agent uses. Permissions are coarser than Claude's allow-list: `sandbox_mode = "workspace-write"`, `approval_policy = "on-request"`, network on.

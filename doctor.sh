@@ -17,7 +17,7 @@ echo "claude config"
 [ -f "$WS/CLAUDE.md" ] && ok "workspace CLAUDE.md" || bad "workspace CLAUDE.md"
 [ -f "$WS/.claude/commands/task-fetch.md" ] && ok "/task-fetch" || bad "/task-fetch command"
 [ -f "$WS/.claude/commands/task-analyse.md" ] && ok "/task-analyse" || bad "/task-analyse command"
-for p in "$WS" "$WS/Omnicasa.Mobile.ABCB" "$WS/Omnicasa.Mobile.ABMB"; do s="$HOME/.claude/projects/$(printf '%s' "$p" | sed 's#/#-#g')/memory"; [ -L "$s" ] && ok "memory linked: $(basename "$p") → $(readlink "$s" | sed "s#$KIT/##")" || bad "memory not linked for $p"; done
+for p in "$WS" "$WS/Omnicasa.Mobile.ABCB" "$WS/Omnicasa.Mobile.ABMB"; do s="$HOME/.claude/projects/$(printf '%s' "$p" | sed 's/[^A-Za-z0-9]/-/g')/memory"; [ -L "$s" ] && ok "memory linked: $(basename "$p") → $(readlink "$s" | sed "s#$KIT/##")" || bad "memory not linked for $p"; done
 have claude && { claude mcp list 2>/dev/null | grep -q "atlassian-isos" && ok "MCP atlassian-isos registered (authenticate with /mcp inside claude)" || bad "MCP atlassian-isos (run claude/mcp.sh)"; claude mcp list 2>/dev/null | grep -q playwright && ok "MCP playwright" || bad "MCP playwright"; }
 
 echo "codex (optional)"
