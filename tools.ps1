@@ -61,4 +61,8 @@ if ($zs) {
 if (Have 'aws') { aws configure set region ap-southeast-1 }
 
 # 4. Python helpers the agent uses for DB / PGP work
-if (Have 'python') { python -m pip install --quiet --disable-pip-version-check pymysql pgpy boto3 2>&1 | Select-String 'error' | ForEach-Object { "     $_" }; Say 'python: pymysql pgpy boto3' } else { Warn 'python not on PATH yet - open a new window and run: pip install pymysql pgpy boto3' }
+if (Have 'python') {
+  python -m pip install --quiet --disable-pip-version-check pymysql boto3 2>&1 | Select-String 'ERROR' | ForEach-Object { "     $_" }; Say 'python: pymysql boto3'
+  # pgpy (data-processor test-drop tool only) ships as a source tarball, which Zscaler blocks with 403 - best effort
+  python -m pip install --quiet --disable-pip-version-check pgpy *> $null; if ($LASTEXITCODE -eq 0) { Say 'python: pgpy' } else { Warn 'python: pgpy not installed (PyPI tarball blocked by the proxy) - only needed for the PGP test-drop tool' }
+} else { Warn 'python not on PATH yet - open a new window and run: pip install pymysql boto3' }

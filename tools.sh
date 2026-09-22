@@ -32,7 +32,11 @@ if have twg || [ -x "$HOME/.local/bin/twg" ]; then say 'twg present'; else
 fi
 
 # 4. Python helpers the agent uses for DB / PGP work
-if have python3; then python3 -m pip install --quiet --disable-pip-version-check --user pymysql pgpy boto3 2>/dev/null || python3 -m pip install --quiet --break-system-packages pymysql pgpy boto3 2>/dev/null || warn 'pip install pymysql pgpy boto3 failed'; say 'python: pymysql pgpy boto3'; fi
+pipi() { python3 -m pip install --quiet --disable-pip-version-check --user "$@" 2>/dev/null || python3 -m pip install --quiet --disable-pip-version-check --break-system-packages "$@" 2>/dev/null; }
+if have python3; then
+  pipi pymysql boto3 && say 'python: pymysql boto3' || warn 'pip install pymysql boto3 failed'
+  pipi pgpy && say 'python: pgpy' || warn 'python: pgpy not installed - only needed for the PGP test-drop tool'   # source-only on PyPI; corporate proxies may block it
+fi
 
 # 5. AWS region default
 have aws && aws configure set region ap-southeast-1
