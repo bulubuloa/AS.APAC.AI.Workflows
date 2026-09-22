@@ -97,4 +97,4 @@ if [ -d "$KIT/.git" ]; then
   chmod +x "$KIT/.git/hooks/pre-commit"; say "installed secret guard (pre-commit)"
 fi
 
-say "done. Next: claude → /mcp (authenticate atlassian-isos); twg (OAuth); aws configure (access key); open tunnels (access/ACCESS.md); then ./doctor.sh"
+say "done. Next: claude → /mcp (authenticate atlassian-isos); twg (OAuth); aws login --region ap-southeast-1; open tunnels (access/ACCESS.md); then ./doctor.sh"

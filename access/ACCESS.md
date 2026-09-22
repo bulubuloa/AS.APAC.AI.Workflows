@@ -1,9 +1,10 @@
 # Access recipes (no secrets in this file — only where they are)
 
 AWS account `739075353953`, region `ap-southeast-1`. Access is an **IAM user** (console sign-in at
-`https://ap-southeast-1.signin.aws.amazon.com/`, not Identity Center). For the CLI: console -> your name -> *Security credentials* ->
-*Create access key* (CLI), then `aws configure` (key, secret, `ap-southeast-1`, `json`). Keys live only in `~/.aws/credentials`.
-`aws sts get-caller-identity` must show that account. If *Create access key* is not allowed, an AWS admin creates it for your user.
+`https://ap-southeast-1.signin.aws.amazon.com/`, not Identity Center). For the CLI: `aws login --region ap-southeast-1` (CLI v2.32+) opens the
+browser console sign-in and caches auto-refreshing temporary credentials - re-run it when the session expires. Long-lived alternative:
+console -> your name -> *Security credentials* -> *Create access key* (CLI), then `aws configure` (key, secret, `ap-southeast-1`, `json`);
+keys live only in `~/.aws/credentials`. Either way `aws sts get-caller-identity` must show that account.
 
 ## Databases
 
