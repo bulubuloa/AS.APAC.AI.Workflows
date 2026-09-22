@@ -104,4 +104,4 @@ if (Test-Path (Join-Path $Kit '.git')) {
   "#!/usr/bin/env bash`ngit diff --cached -U0 -- . ':(exclude)claude/secret-guard.pl' | perl `"`$(git rev-parse --show-toplevel)/claude/secret-guard.pl`" || { echo `"pre-commit: staged diff looks like it contains a credential - point at the secret name instead`"; exit 1; }`n" | Set-Content -NoNewline -Encoding ascii $hook
   Say 'installed secret guard (pre-commit)'
 }
-Say 'done. Next: claude -> /mcp (authenticate atlassian-isos); twg; aws sso login; open tunnels (access\ACCESS.md); then .\doctor.ps1'
+Say 'done. Next: claude -> /mcp (authenticate atlassian-isos); twg; aws configure (access key); open tunnels (access\ACCESS.md); then .\doctor.ps1'

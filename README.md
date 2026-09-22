@@ -49,7 +49,7 @@ git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 # 3. Authenticate the things only you can authenticate
 claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
 twg login         # only if you skipped the login during install; then `twg doctor`
-aws sso login     # or configure the ap-southeast-1 profile you were given
+aws configure     # IAM user: access key from console > Security credentials; region ap-southeast-1 (SSO users: aws sso login)
 # open the DB tunnels you were given (ports in access/ACCESS.md)
 
 # 4. Check
@@ -83,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File .\ai-workspace\bootstrap.ps1
 # 3. Authenticate the things only you can authenticate
 claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
 twg login         # only if you skipped the login during install; then `twg doctor`
-aws sso login     # or configure the ap-southeast-1 profile you were given
+aws configure     # IAM user: access key from console > Security credentials; region ap-southeast-1 (SSO users: aws sso login)
 # DB tunnels: ssh -N -L 3375:... user@bastion in its own PowerShell window (ports in access\ACCESS.md)
 
 # 4. Check

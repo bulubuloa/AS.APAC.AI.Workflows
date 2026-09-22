@@ -28,7 +28,7 @@ if [ -d "$HOME/.codex" ]; then
   grep -q 'mcp_servers.atlassian-isos' "$HOME/.codex/config.toml" 2>/dev/null && ok "codex MCP atlassian-isos in config.toml (login: codex mcp login atlassian-isos)" || bad "codex MCP atlassian-isos"
 else ok "codex not installed — skipped"; fi
 echo "access"
-aws sts get-caller-identity --query Account --output text 2>/dev/null | grep -q 739075353953 && ok "AWS account 739075353953" || bad "AWS credentials (aws sso login / profile) — expected account 739075353953"
+aws sts get-caller-identity --query Account --output text 2>/dev/null | grep -q 739075353953 && ok "AWS account 739075353953" || bad "AWS credentials (aws configure with your IAM access key, region ap-southeast-1) — expected account 739075353953"
 aws secretsmanager describe-secret --secret-id benefit-connection-string-preprod >/dev/null 2>&1 && ok "can read secret benefit-connection-string-preprod" || bad "secret benefit-connection-string-preprod not readable"
 for port in 3375:"Benefit SIT/UAT MySQL (benefit-sit cluster)" 3382:"Benefit PROD MySQL (read-only use)" 3383:"RSA PROD MSSQL"; do p="${port%%:*}"; (lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1) && ok "tunnel $p ${port#*:}" || bad "tunnel $p ${port#*:} not listening"; done
 have twg && { twg confluence space get AD >/dev/null 2>&1 && ok "twg Confluence (AD space)" || bad "twg not authenticated (run: twg confluence space get AD)"; }

@@ -36,7 +36,7 @@ if (Test-Path $CodexHome) {
 
 Write-Host 'access'
 $acct = aws sts get-caller-identity --query Account --output text 2>$null
-if ($acct -eq '739075353953') { OK 'AWS account 739075353953' } else { Bad 'AWS credentials (aws sso login / profile) - expected account 739075353953' }
+if ($acct -eq '739075353953') { OK 'AWS account 739075353953' } else { Bad 'AWS credentials (aws configure with your IAM access key, region ap-southeast-1) - expected account 739075353953' }
 aws secretsmanager describe-secret --secret-id benefit-connection-string-preprod *> $null; if ($LASTEXITCODE -eq 0) { OK 'can read secret benefit-connection-string-preprod' } else { Bad 'secret benefit-connection-string-preprod not readable' }
 foreach ($t in @(@(3375,'Benefit SIT/UAT MySQL (benefit-sit cluster)'), @(3382,'Benefit PROD MySQL (read-only use)'), @(3383,'RSA PROD MSSQL'))) {
   if (Get-NetTCPConnection -State Listen -LocalPort $t[0] -ErrorAction SilentlyContinue) { OK "tunnel $($t[0]) $($t[1])" } else { Bad "tunnel $($t[0]) $($t[1]) not listening" }
