@@ -119,7 +119,7 @@ def client_page(c):
 
     p.append("<h2>7. Known issues and gotchas</h2>" + li(c["gotchas"]))
     p.append("<h2>8. Open items</h2>" + li(c["open"]))
-    p.append("<h2>9. Where the knowledge lives</h2><ul><li>Code: <code>Omnicasa.Mobile.ABCB/DataProcesser/DataProcesser/" + c["folder"] + "/</code>, shared code under <code>Common/</code>, <code>Services/Handback/</code>, <code>Constants/</code>.</li><li>Repo docs: <code>docs/data-processor/</code> (" + esc(c["docs"]) + ").</li><li>Agent memory (ABCB project): the reference notes listed on the Overview page; anything learned while working this client should be added there so the next session — human or agent — starts from it.</li></ul>")
+    p.append("<h2>9. Where the knowledge lives</h2><ul><li>Code: <code>ABCB/DataProcesser/DataProcesser/" + c["folder"] + "/</code>, shared code under <code>Common/</code>, <code>Services/Handback/</code>, <code>Constants/</code>.</li><li>Repo docs: <code>docs/data-processor/</code> (" + esc(c["docs"]) + ").</li><li>Agent memory (ABCB project): the reference notes listed on the Overview page; anything learned while working this client should be added there so the next session — human or agent — starts from it.</li></ul>")
     return "\n".join(p)
 
 def overview_page():
@@ -128,7 +128,7 @@ def overview_page():
     p.append('<div data-type="panel-info"><p><strong>Who this is for.</strong> A developer picking up a data-processor ticket, QA planning a test, and any AI agent working in the ABCB repository. If a fact here disagrees with AWS or the code, the code/AWS wins — fix the page.</p></div>')
 
     p.append("<h2>1. What the DataProcesser is</h2>")
-    p.append("<p>A .NET 8 console application (<code>Omnicasa.Mobile.ABCB/DataProcesser/DataProcesser</code>, entry <code>Program.cs</code>) packaged as one Docker image and run as <strong>AWS Batch (Fargate)</strong> jobs. One image serves every client; the <code>JOBTYPE</code> environment variable selects the client processor in a <code>switch</code> (<code>Constants/JobType.cs</code>). Each job takes one client file (Excel, CSV, fixed-width text, PGP/zip), validates every row against the client's field configuration, upserts customers into the Benefit MySQL database (<code>customers</code>, <code>customerprograms</code>, attributes JSON), attaches the client's program/tier, emails a result, and publishes a per-row <em>handback report</em> that ABF shows on the <em>Data Processor Report</em> screen.</p>")
+    p.append("<p>A .NET 8 console application (<code>ABCB/DataProcesser/DataProcesser</code>, entry <code>Program.cs</code>) packaged as one Docker image and run as <strong>AWS Batch (Fargate)</strong> jobs. One image serves every client; the <code>JOBTYPE</code> environment variable selects the client processor in a <code>switch</code> (<code>Constants/JobType.cs</code>). Each job takes one client file (Excel, CSV, fixed-width text, PGP/zip), validates every row against the client's field configuration, upserts customers into the Benefit MySQL database (<code>customers</code>, <code>customerprograms</code>, attributes JSON), attaches the client's program/tier, emails a result, and publishes a per-row <em>handback report</em> that ABF shows on the <em>Data Processor Report</em> screen.</p>")
     p.append(mermaid("""flowchart TB
   subgraph IN[Ingestion — one pattern per client]
     direction LR

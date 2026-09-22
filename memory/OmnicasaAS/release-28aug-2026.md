@@ -8,7 +8,7 @@ metadata:
   modified: 2026-08-26T18:04:53.376Z
 ---
 
-**ABMB 27 Aug 00:59 run was a TEST DEPLOY - REVERTED same night** (sites restored from C:\RoadSide-Backup\2026.08.27.*, VC_ConsultType view reverted to legacy def; real deploy planned 28 Aug: re-run MasterData script + new prod/ tag + approve; DB otherwise stays prepared) — tag `prod/20260827_02`, pipeline exec `4e511115`, CodeDeploy `d-0S0JYOGUK`, verified live (logins + dispatcher activity minutes after). Full runbook: `Omnicasa.Mobile.ABMB/docs/RELEASE-28AUG-2026.md` + `DatabaseScript/Release-28Aug-2026/RUN-ORDER.md`; master scripts `20260828_MASTER_PreDeploy.sql` / `_Rollback.sql`. See [[abmb-roadside-cicd]], [[abe-brand-management]].
+**ABMB 27 Aug 00:59 run was a TEST DEPLOY - REVERTED same night** (sites restored from C:\RoadSide-Backup\2026.08.27.*, VC_ConsultType view reverted to legacy def; real deploy planned 28 Aug: re-run MasterData script + new prod/ tag + approve; DB otherwise stays prepared) — tag `prod/20260827_02`, pipeline exec `4e511115`, CodeDeploy `d-0S0JYOGUK`, verified live (logins + dispatcher activity minutes after). Full runbook: `ABMB/docs/RELEASE-28AUG-2026.md` + `DatabaseScript/Release-28Aug-2026/RUN-ORDER.md`; master scripts `20260828_MASTER_PreDeploy.sql` / `_Rollback.sql`. See [[abmb-roadside-cicd]], [[abe-brand-management]].
 
 Done on prod: master DB script (log in session scratchpad; backup suffix 20260821 in `bak` schema — 345,111 consult values), snapshots `rsa-prerelease-20260826` + `-20260827-deploy`, CMS seeds + `porsche_rsa` published in env 994226e6, NIMITMAI dealer bActive=0 (ABE-5322). Consult migration was CANCELLED by ABE-5355 (per-client values via SysLookup CONSULT_TYPE / CONSULT_TYPE_PTH + `VC_ConsultType`; detection by clientCode='PTH').
 

@@ -9,11 +9,11 @@ is committed to `ai-workspace/memory/` at the end of the ticket.**
 
 | Local folder | Bitbucket repo | What | Stack |
 |---|---|---|---|
-| `Omnicasa.Mobile.ABMB` | `apac-booking-modernization-backend` | **RSA / RoadSide** web app (`RoadSide/bkkrsa2020-master/BkkIsos47.sln`): agent portal (MSU), provider portal, partner APIs, Benefit webhooks | .NET Framework 4.8 ASP.NET on IIS (EC2), MSSQL |
-| `Omnicasa.Mobile.ABVB` | `apac-benefit-vendor-backend` | **Vendor** backend: vendors, Kontent.ai CMS modules, dealer/provider sync to RSA (`VendorServerless`) | .NET Lambda |
-| `Omnicasa.Mobile.ABF` | `apac-benefits-frontend` | **Benefit admin UI** (Blazor WASM, MudBlazor): customers, privileges, reports, vendor module, Data Processor Report | .NET Blazor |
-| `Omnicasa.Mobile.ABCB` | `apac-benefit-client-backend` | checkout on the **data-processor** branches: `DataProcesser/` (client customer-file imports, AWS Batch) | .NET 8 console → Docker → Batch |
-| `Omnicasa.Mobile.ABCB.Clone` | `apac-benefit-client-backend` | same repo on **`develop`**: `ClientService.API` (Lambda `api/clients/*` — privileges, reports, customers, handback), `WebHookSyncDataRsaBenefit` (`api/webhook-roadside/*`) | .NET Lambda |
+| `ABMB` | `apac-booking-modernization-backend` | **RSA / RoadSide** web app (`RoadSide/bkkrsa2020-master/BkkIsos47.sln`): agent portal (MSU), provider portal, partner APIs, Benefit webhooks | .NET Framework 4.8 ASP.NET on IIS (EC2), MSSQL |
+| `ABVB` | `apac-benefit-vendor-backend` | **Vendor** backend: vendors, Kontent.ai CMS modules, dealer/provider sync to RSA (`VendorServerless`) | .NET Lambda |
+| `ABF` | `apac-benefits-frontend` | **Benefit admin UI** (Blazor WASM, MudBlazor): customers, privileges, reports, vendor module, Data Processor Report | .NET Blazor |
+| `ABCB` | `apac-benefit-client-backend` | checkout on the **data-processor** branches: `DataProcesser/` (client customer-file imports, AWS Batch) | .NET 8 console → Docker → Batch |
+| `ABCB.Clone` | `apac-benefit-client-backend` | same repo on **`develop`**: `ClientService.API` (Lambda `api/clients/*` — privileges, reports, customers, handback), `WebHookSyncDataRsaBenefit` (`api/webhook-roadside/*`) | .NET Lambda |
 | `ai-workspace` | (this kit) | instructions, commands, memory, access recipes, Confluence generators | — |
 | `issues/` | — | one task file per ticket (`issues/ABE-xxxx.md`): brief → analysis → implementation → verification → release. Not committed to product repos | — |
 
@@ -80,4 +80,4 @@ Full recipes: `ai-workspace/access/ACCESS.md`.
 ## Where the documentation is
 - Confluence AD space → *APAC Aspire Digital Artificial intelligence (AI)* → **AI in the Development Workflow** (overview `6837665931`; parts 1–5; worked examples Sprint 70 `6837895252`, ABE-5461 `6837207394`)
 - Confluence AD space → *APAC Aspire Benefit Data Processors* → **Benefit Data Processors** (overview `6837534805`, one page per client) — read the client page before touching a processor; regenerate with `ai-workspace/confluence/data-processors/`
-- Repo docs: `Omnicasa.Mobile.ABCB/docs/data-processor/*`, `Omnicasa.Mobile.ABMB/RoadSide/**/docs`, `issues/*-RUNBOOK.md`
+- Repo docs: `ABCB/docs/data-processor/*`, `ABMB/RoadSide/**/docs`, `issues/*-RUNBOOK.md`

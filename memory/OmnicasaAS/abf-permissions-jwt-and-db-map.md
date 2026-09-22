@@ -8,7 +8,7 @@ metadata:
   modified: 2026-07-31T08:56:18.631Z
 ---
 
-In Omnicasa.Mobile.ABF, role permissions are carried **only** inside the JWT — `CustomAuthenticationStateProvider.GetClaimsFromJwt` reads the `Permission` array; there is no permission API call. Consequences verified 2026-07-31:
+In ABF, role permissions are carried **only** inside the JWT — `CustomAuthenticationStateProvider.GetClaimsFromJwt` reads the `Permission` array; there is no permission API call. Consequences verified 2026-07-31:
 
 - Changing a role's permission matrix does **not** affect anyone already signed in. They must log out and back in.
 - SignalR token regeneration is dead in this client: no `CascadingValue` provider for `HubConnection`, no receiver for `ReceiveRegenerateTokens`, and `TryInitialize` is commented out everywhere. `UserRoles.razor:137` would NRE if reached. Do not "fix" stale permissions by uncommenting the `SendRegenerateTokens` calls.

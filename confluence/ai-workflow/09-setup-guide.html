@@ -29,18 +29,18 @@ git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 ./ai-workspace/clone.sh</code></pre>
 <p>Or by hand, which is exactly what the script does:</p>
 <pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
-git clone https://bitbucket.org/internationalsos/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
-git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB
-git clone https://bitbucket.org/internationalsos/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
-git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB
-git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone
-git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git                         ai-workspace
+git clone https://bitbucket.org/internationalsos/apac-booking-modernization-backend.git ABMB
+git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git ABVB
+git clone https://bitbucket.org/internationalsos/apac-benefits-frontend.git ABF
+git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git ABCB
+git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git ABCB.Clone
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
-cd Omnicasa.Mobile.ABCB       &amp;&amp; git checkout data-processer-pre-production &amp;&amp; cd ..   # data processors
-cd Omnicasa.Mobile.ABCB.Clone &amp;&amp; git checkout develop                       &amp;&amp; cd ..   # ClientService.API
-cd Omnicasa.Mobile.ABVB &amp;&amp; git checkout develop &amp;&amp; cd ..
-cd Omnicasa.Mobile.ABF  &amp;&amp; git checkout develop &amp;&amp; cd ..
-cd Omnicasa.Mobile.ABMB &amp;&amp; git checkout roadside-release-uat &amp;&amp; cd ..</code></pre>
+cd ABCB       &amp;&amp; git checkout data-processer-pre-production &amp;&amp; cd ..   # data processors
+cd ABCB.Clone &amp;&amp; git checkout develop                       &amp;&amp; cd ..   # ClientService.API
+cd ABVB &amp;&amp; git checkout develop &amp;&amp; cd ..
+cd ABF  &amp;&amp; git checkout develop &amp;&amp; cd ..
+cd ABMB &amp;&amp; git checkout roadside-release-uat &amp;&amp; cd ..</code></pre>
 <p>The client-backend repo is huge; the first clone takes a while. The two checkouts of it are deliberate: the data-processor branches strip the API projects and vice-versa.</p>
 
 <h2>4. Install the kit</h2>

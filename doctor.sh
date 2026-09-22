@@ -10,14 +10,14 @@ have mysql || [ -x /opt/homebrew/opt/mysql-client/bin/mysql ] && ok "mysql clien
 python3 -c "import pymysql" 2>/dev/null && ok "python pymysql" || bad "python pymysql (pip3 install pymysql)"
 
 echo "repos"
-for r in ABMB ABVB ABF ABCB ABCB.Clone; do d="$WS/Omnicasa.Mobile.$r"; [ -d "$d/.git" ] && ok "$r ($(git -C "$d" branch --show-current))" || bad "$r missing at $d"; done
+for r in ABMB ABVB ABF ABCB ABCB.Clone; do d="$WS/$r"; [ -d "$d/.git" ] && ok "$r ($(git -C "$d" branch --show-current))" || bad "$r missing at $d"; done
 
 echo "claude config"
 [ -f "$HOME/.claude/CLAUDE.md" ] && ok "~/.claude/CLAUDE.md" || bad "~/.claude/CLAUDE.md"
 [ -f "$WS/CLAUDE.md" ] && ok "workspace CLAUDE.md" || bad "workspace CLAUDE.md"
 [ -f "$WS/.claude/commands/task-fetch.md" ] && ok "/task-fetch" || bad "/task-fetch command"
 [ -f "$WS/.claude/commands/task-analyse.md" ] && ok "/task-analyse" || bad "/task-analyse command"
-for p in "$WS" "$WS/Omnicasa.Mobile.ABCB" "$WS/Omnicasa.Mobile.ABMB"; do s="$HOME/.claude/projects/$(printf '%s' "$p" | sed 's/[^A-Za-z0-9]/-/g')/memory"; [ -L "$s" ] && ok "memory linked: $(basename "$p") → $(readlink "$s" | sed "s#$KIT/##")" || bad "memory not linked for $p"; done
+for p in "$WS" "$WS/ABCB" "$WS/ABMB"; do s="$HOME/.claude/projects/$(printf '%s' "$p" | sed 's/[^A-Za-z0-9]/-/g')/memory"; [ -L "$s" ] && ok "memory linked: $(basename "$p") → $(readlink "$s" | sed "s#$KIT/##")" || bad "memory not linked for $p"; done
 have claude && { claude mcp list 2>/dev/null | grep -q "atlassian-isos" && ok "MCP atlassian-isos registered (authenticate with /mcp inside claude)" || bad "MCP atlassian-isos (run claude/mcp.sh)"; claude mcp list 2>/dev/null | grep -q playwright && ok "MCP playwright" || bad "MCP playwright"; }
 
 echo "codex (optional)"

@@ -10,11 +10,11 @@ BB=https://bitbucket.org/internationalsos
 say() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 # folder | repo | branch   (folder names matter — the agent knows the repos by these names)
 REPOS="
-Omnicasa.Mobile.ABMB       apac-booking-modernization-backend roadside-release-uat
-Omnicasa.Mobile.ABVB       apac-benefit-vendor-backend        develop
-Omnicasa.Mobile.ABF        apac-benefits-frontend             develop
-Omnicasa.Mobile.ABCB       apac-benefit-client-backend        data-processer-pre-production
-Omnicasa.Mobile.ABCB.Clone apac-benefit-client-backend        develop
+ABMB        apac-booking-modernization-backend  roadside-release-uat
+ABVB        apac-benefit-vendor-backend         develop
+ABF         apac-benefits-frontend              develop
+ABCB        apac-benefit-client-backend         data-processer-pre-production
+ABCB.Clone  apac-benefit-client-backend         develop
 "
 mkdir -p "$WS"; say "workspace: $WS"
 echo "$REPOS" | while read -r dir repo branch; do

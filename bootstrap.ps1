@@ -44,7 +44,7 @@ Say "installed workspace CLAUDE.md, $((Get-ChildItem (Join-Path $Kit 'claude\com
 # 3. Per-repo instructions
 Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
   $name = $_.Name
-  foreach ($dir in @((Join-Path $WS "Omnicasa.Mobile.$name"), (Join-Path $WS "Omnicasa.Mobile.$name.Clone"))) {
+  foreach ($dir in @((Join-Path $WS "$name"), (Join-Path $WS "$name.Clone"))) {
     if (Test-Path $dir) {
       Backup (Join-Path $dir 'CLAUDE.md') (Join-Path $_.FullName 'CLAUDE.md'); Copy-Item (Join-Path $_.FullName 'CLAUDE.md') (Join-Path $dir 'CLAUDE.md'); Say "installed $dir\CLAUDE.md"
       Backup (Join-Path $dir '.mcp.json') (Join-Path $Kit 'claude\mcp.json'); Copy-Item (Join-Path $Kit 'claude\mcp.json') (Join-Path $dir '.mcp.json')
@@ -66,8 +66,8 @@ function Link-Memory($folder, $kitName) {
   New-Item -ItemType Junction -Path $mem -Target $target | Out-Null; Say "memory: $folder -> memory\$kitName"
 }
 Link-Memory $WS 'OmnicasaAS'
-foreach ($p in @('Omnicasa.Mobile.ABCB','Omnicasa.Mobile.ABCB.Clone')) { if (Test-Path (Join-Path $WS $p)) { Link-Memory (Join-Path $WS $p) 'ABCB' } }
-if (Test-Path (Join-Path $WS 'Omnicasa.Mobile.ABMB')) { Link-Memory (Join-Path $WS 'Omnicasa.Mobile.ABMB') 'ABMB' }
+foreach ($p in @('ABCB','ABCB.Clone')) { if (Test-Path (Join-Path $WS $p)) { Link-Memory (Join-Path $WS $p) 'ABCB' } }
+if (Test-Path (Join-Path $WS 'ABMB')) { Link-Memory (Join-Path $WS 'ABMB') 'ABMB' }
 
 # 5. MCP servers (user scope). PS 5.1 turns a native command's stderr into a terminating error under 'Stop',
 # so probe registration through cmd instead of 2>$null.
@@ -85,7 +85,7 @@ if ((Test-Path $CodexHome) -or $WithCodex) {
   $pre = Get-Content (Join-Path $Kit 'codex\AGENTS.preamble.md') -Raw; $wsmap = Get-Content (Join-Path $Kit 'workspace\CLAUDE.md') -Raw
   Set-Content (Join-Path $WS 'AGENTS.md') ($pre + $wsmap)
   Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
-    foreach ($dir in @((Join-Path $WS "Omnicasa.Mobile.$($_.Name)"), (Join-Path $WS "Omnicasa.Mobile.$($_.Name).Clone"))) {
+    foreach ($dir in @((Join-Path $WS "$($_.Name)"), (Join-Path $WS "$($_.Name).Clone"))) {
       if (Test-Path $dir) { Set-Content (Join-Path $dir 'AGENTS.md') ($pre + "# Workspace map (from ai-workspace/workspace/CLAUDE.md)`n`n" + $wsmap + "`n---`n`n" + (Get-Content (Join-Path $_.FullName 'CLAUDE.md') -Raw)) }
     }
   }

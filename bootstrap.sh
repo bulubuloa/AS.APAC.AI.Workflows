@@ -3,7 +3,7 @@
 set -euo pipefail
 
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WS="${WORKSPACE:-$(dirname "$KIT")}"          # the folder that holds the Omnicasa.Mobile.* repos
+WS="${WORKSPACE:-$(dirname "$KIT")}"          # the folder that holds the ABMB/ABVB/ABF/ABCB repos
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 STAMP="$(date +%Y%m%d%H%M%S)"
 
@@ -35,7 +35,7 @@ say "installed workspace CLAUDE.md, $(ls "$KIT"/claude/commands | wc -l | tr -d 
 # 3. Per-repo instructions (only for repos that are checked out)
 for r in "$KIT"/workspace/repos/*/; do
   name="$(basename "$r")"
-  for dir in "$WS/Omnicasa.Mobile.$name" "$WS/Omnicasa.Mobile.$name.Clone"; do
+  for dir in "$WS/$name" "$WS/$name.Clone"; do
     if [ -d "$dir" ]; then
       backup "$dir/CLAUDE.md" "$r/CLAUDE.md"; cp "$r/CLAUDE.md" "$dir/CLAUDE.md"; say "installed $dir/CLAUDE.md"
       backup "$dir/.mcp.json" "$KIT/claude/mcp.json"; cp "$KIT/claude/mcp.json" "$dir/.mcp.json"
@@ -58,9 +58,9 @@ link_memory() { # $1 = folder the agent runs in, $2 = kit memory name
   ln -s "$target" "$proj/memory"; say "memory: $1 → memory/$2"
 }
 link_memory "$WS" OmnicasaAS
-[ -d "$WS/Omnicasa.Mobile.ABCB" ]       && link_memory "$WS/Omnicasa.Mobile.ABCB" ABCB
-[ -d "$WS/Omnicasa.Mobile.ABCB.Clone" ] && link_memory "$WS/Omnicasa.Mobile.ABCB.Clone" ABCB
-[ -d "$WS/Omnicasa.Mobile.ABMB" ]       && link_memory "$WS/Omnicasa.Mobile.ABMB" ABMB
+[ -d "$WS/ABCB" ]       && link_memory "$WS/ABCB" ABCB
+[ -d "$WS/ABCB.Clone" ] && link_memory "$WS/ABCB.Clone" ABCB
+[ -d "$WS/ABMB" ]       && link_memory "$WS/ABMB" ABMB
 
 # 5. MCP servers (user scope; harmless if already present)
 if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "claude CLI not found — install Claude Code, then run claude/mcp.sh"; fi
@@ -78,7 +78,7 @@ if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ]; then
   backup "$WS/AGENTS.md"; cat "$KIT/codex/AGENTS.preamble.md" "$KIT/workspace/CLAUDE.md" > "$WS/AGENTS.md"
   for r in "$KIT"/workspace/repos/*/; do
     name="$(basename "$r")"
-    for dir in "$WS/Omnicasa.Mobile.$name" "$WS/Omnicasa.Mobile.$name.Clone"; do
+    for dir in "$WS/$name" "$WS/$name.Clone"; do
       [ -d "$dir" ] || continue
       backup "$dir/AGENTS.md"; { cat "$KIT/codex/AGENTS.preamble.md"; echo "# Workspace map (from ai-workspace/workspace/CLAUDE.md)"; echo; cat "$KIT/workspace/CLAUDE.md"; echo; echo "---"; echo; cat "$r/CLAUDE.md"; } > "$dir/AGENTS.md"
     done

@@ -9,11 +9,11 @@ $BB  = 'https://bitbucket.org/internationalsos'
 function Say($m) { Write-Host "==> $m" -ForegroundColor Cyan }
 # folder names matter — the agent knows the repos by these names
 $Repos = @(
-  @{ Dir = 'Omnicasa.Mobile.ABMB';       Repo = 'apac-booking-modernization-backend'; Branch = 'roadside-release-uat' },
-  @{ Dir = 'Omnicasa.Mobile.ABVB';       Repo = 'apac-benefit-vendor-backend';        Branch = 'develop' },
-  @{ Dir = 'Omnicasa.Mobile.ABF';        Repo = 'apac-benefits-frontend';             Branch = 'develop' },
-  @{ Dir = 'Omnicasa.Mobile.ABCB';       Repo = 'apac-benefit-client-backend';        Branch = 'data-processer-pre-production' },
-  @{ Dir = 'Omnicasa.Mobile.ABCB.Clone'; Repo = 'apac-benefit-client-backend';        Branch = 'develop' }
+  @{ Dir = 'ABMB';        Repo = 'apac-booking-modernization-backend'; Branch = 'roadside-release-uat' },
+  @{ Dir = 'ABVB';        Repo = 'apac-benefit-vendor-backend';        Branch = 'develop' },
+  @{ Dir = 'ABF';         Repo = 'apac-benefits-frontend';             Branch = 'develop' },
+  @{ Dir = 'ABCB';        Repo = 'apac-benefit-client-backend';        Branch = 'data-processer-pre-production' },
+  @{ Dir = 'ABCB.Clone';  Repo = 'apac-benefit-client-backend';        Branch = 'develop' }
 )
 New-Item -ItemType Directory -Force $WS | Out-Null; $WS = (Resolve-Path $WS).Path; Say "workspace: $WS"
 foreach ($r in $Repos) {

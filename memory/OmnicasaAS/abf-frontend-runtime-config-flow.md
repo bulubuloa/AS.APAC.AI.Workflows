@@ -12,7 +12,7 @@ S3 `appsettings.json` at runtime in non-dev. In `src/Client/Program.cs`, non-dev
 `GetParameterStore.GetAppsettingFromServerSide(domain)` → `GET https://api-benefit-<env>.aspireasia.net/api/clients/parameter-store/get-parameter-store`
 → AES-CBC encrypted blob (key + iv are the constants in `src/Client/Program.cs`, PKCS7) → decrypted client-side into IConfiguration.
 
-The client-backend (ABCB = Omnicasa.Mobile.ABCB) serves that endpoint. Its appsettings come from
+The client-backend (ABCB = ABCB) serves that endpoint. Its appsettings come from
 Secrets Manager `codepipeline/apac-benefit-client-backend-<env>/APPSETTINGS_JSON`. The frontend
 ApplicationSettings it returns are read LIVE from the SSM SecureString named by
 `ServiceConfiguration.ParameterStoreAppConfigFrontend` = **`/abe/codepipeline/apac-benefit-frontend-<env>/APPSETTINGS_JSON`**
