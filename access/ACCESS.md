@@ -10,8 +10,9 @@ keys live only in `~/.aws/credentials`. Either way `aws sts get-caller-identity`
 
 The RDS endpoints are private; the developer opens SSH tunnels through the bastion (`ec2-user@` EC2 "Bastion Host"
 `i-04bfdfefcdfb089df`, EIP `13.250.112.53`) on fixed local ports and the agent connects to `127.0.0.1:<port>`.
-`access/tunnel.sh up|down|status [ports]` does it — targets in `tunnels.env` (committed), key = `~/.ssh/ABE.pem` or
-`ABE_SSH_KEY` (handed over out of band, never in git or chat). The bastion security group allows port 22 only from
+`access/tunnel.sh up|down|status [ports]` (Windows: `powershell -File access\tunnel.ps1 up|down|status`) does it — targets in
+`tunnels.env` (committed), key = `~/.ssh/ABE.pem` or `ABE_SSH_KEY` (handed over out of band, never in git or chat; on Windows the
+script restricts the key's ACL for OpenSSH). The bastion security group allows port 22 only from
 known developer IPs (`sg-006ea52049f6aee44`); a new/rotated IP means asking for it to be added. Ports are a
 convention shared with the memory notes — keep them.
 
@@ -23,8 +24,10 @@ convention shared with the memory notes — keep them.
 | 3383 | RSA MSSQL `rsa-prod` (also reachable directly from the VPN) | `BKKRsa` | secret `roadside-connection-string` → `ROAD_SIDE_PROD` |
 | — | RSA MSSQL `apac-staging` (SIT/UAT/preprod, **stopped nightly ~20:00 Bangkok**) | `BKKRsaStaging` (UAT), `BKKRsaPreprodLite` | secret `roadside-connection-string` (UAT entry: `apacadmin`) |
 
-Clients: `/opt/homebrew/opt/mysql-client/bin/mysql`, `sqlcmd` (Homebrew), or Python `pymysql` (the agent reads the
-secret into memory and never writes a password to disk or to the conversation).
+Clients: macOS `/opt/homebrew/opt/mysql-client/bin/mysql` and `sqlcmd` (Homebrew); Windows `mysqlsh --sql` (MySQL Shell) and `sqlcmd`;
+or Python `pymysql` on both. The agent reads the secret into memory (`aws secretsmanager get-secret-value`) and never writes a
+password to disk or to the conversation - e.g. `mysql -h 127.0.0.1 -P 3375 -u <user> -p<password> AspireProdBackup`,
+`sqlcmd -S 127.0.0.1,3383 -d BKKRsa -U <user> -P <password> -Q "..."`.
 
 Rules: prod is read-only and aggregate-first; SIT/UAT writes only through the application or a reviewed script;
 never copy customer rows between environments without the developer running it.

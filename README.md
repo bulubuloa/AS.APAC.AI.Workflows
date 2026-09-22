@@ -66,19 +66,21 @@ aws login --region ap-southeast-1
 powershell -ExecutionPolicy Bypass -File .\ai-workspace\doctor.ps1
 ```
 
-DB tunnels: `./ai-workspace/access/tunnel.sh up` (Windows: `access\tunnel.ps1 up`) opens 3375/3382/3383 through the bastion. Hosts and ports are committed in `access/tunnels.env`; the only secret is the bastion key `ABE.pem` — get it from the team out of band, put it at `~/.ssh/ABE.pem` (`chmod 400`) or point `ABE_SSH_KEY` at it. `*.pem` is git-ignored here and the pre-commit guard rejects private keys.
+DB tunnels: `./ai-workspace/access/tunnel.sh up` (Windows: `powershell -File .\ai-workspace\access\tunnel.ps1 up`) opens 3375 (Benefit SIT+UAT), 3382 (Benefit PROD, read-only) and 3383 (RSA PROD) through the bastion; `status` / `down` likewise. Hosts and ports are committed in `access/tunnels.env`; the only secret is the bastion key `ABE.pem` — get it from the team out of band and put it at `~/.ssh/ABE.pem` (macOS: `chmod 400`; Windows: `~\.ssh\ABE.pem`, the script sets the file ACL itself) or point `ABE_SSH_KEY` at it. `*.pem` is git-ignored here and the pre-commit guard rejects private keys. The agent then connects to `127.0.0.1:<port>` with the login from the secret named in `access/ACCESS.md`.
 
 Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
 
 ## New device (yours or a teammate's)
 
 1. Clone the kit and run the bootstrap (above) — `access/tunnels.env` and `access/tunnel.sh` come with it.
-2. Put the bastion key at `~/.ssh/ABE.pem` (`chmod 400`). It is the only thing git does not carry: copy it from your
+2. Put the bastion key at `~/.ssh/ABE.pem` (macOS/Linux: `chmod 400`; Windows: `~\.ssh\ABE.pem`, no chmod — `tunnel.ps1`
+   restricts the file ACL, which Windows OpenSSH insists on). It is the only thing git does not carry: copy it from your
    other machine (AirDrop / `scp` / password-manager attachment) — never through chat, email or a ticket attachment.
    Key kept elsewhere? `ABE_SSH_KEY=/path` in your shell profile or in `access/tunnels.local.env` (git-ignored).
 3. The bastion security group (`sg-006ea52049f6aee44`) allows port 22 only from known IPs; on a new network
-   `tunnel.sh up` fails and prints your public IP — send it to whoever manages the SG.
-4. `./ai-workspace/access/tunnel.sh up` then `./ai-workspace/doctor.sh`.
+   `tunnel up` fails and prints the public IP the bastion sees (on an ISOS laptop that is the Zscaler egress, not your
+   home IP) — send it to whoever manages the SG.
+4. `./ai-workspace/access/tunnel.sh up` (Windows: `powershell -File .\ai-workspace\access\tunnel.ps1 up`) then `doctor`.
 
 ## Windows notes
 

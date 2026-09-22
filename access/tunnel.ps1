@@ -14,8 +14,14 @@ foreach ($port in $Ports) {
     'up'     {
       if ($proc) { "  up   $port -> $target (already)"; continue }
       if (-not (Test-Path $key)) { Write-Error "PEM key not found: $key - set ABE_SSH_KEY or copy the key to ~\.ssh\ABE.pem"; exit 1 }
-      Start-Process ssh -WindowStyle Hidden -ArgumentList @('-i', "`"$key`"", '-o', 'ExitOnForwardFailure=yes', '-o', 'ServerAliveInterval=60', '-L', "${port}:$target", "$($cfg.BASTION_USER)@$($cfg.BASTION_HOST)", '-N')
-      "  up   $port -> $target (if it drops at once: the bastion security group must allow your public IP on port 22)"
+      # Windows OpenSSH rejects a key other accounts can read (the chmod 400 of the Unix world) - keys copied from elsewhere usually are
+      icacls $key /inheritance:r /grant:r "${env:USERNAME}:R" *> $null
+      # accept-new: the first connection would otherwise wait for a fingerprint answer in the hidden window
+      Start-Process ssh -WindowStyle Hidden -ArgumentList @('-i', "`"$key`"", '-o', 'ExitOnForwardFailure=yes', '-o', 'ServerAliveInterval=60', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=10', '-L', "${port}:$target", "$($cfg.BASTION_USER)@$($cfg.BASTION_HOST)", '-N')
+      $deadline = (Get-Date).AddSeconds(15)
+      while ((Get-Date) -lt $deadline -and -not (Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue)) { Start-Sleep -Milliseconds 500 }
+      if (Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue) { "  up   $port -> $target" }
+      else { $ip = try { (Invoke-RestMethod -Uri 'https://ifconfig.me/ip' -TimeoutSec 5) } catch { '?' }; Write-Error "FAIL $port - the bastion security group must allow your public IP ($ip) on port 22; run the ssh by hand to see the error"; exit 1 }
     }
   }
 }
