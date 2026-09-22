@@ -19,8 +19,9 @@ brew install sqlcmd                       # MSSQL client (RSA databases)
 pip3 install pymysql pgpy boto3           # the agent's DB / PGP helpers
 # .NET SDK 8 (ClientService.API, ABF) — https://dotnet.microsoft.com/download ; ABMB (RoadSide) builds on Windows CodeBuild, not locally
 npm install -g @anthropic-ai/claude-code  # Claude Code CLI, v2.1+
-# twg (Atlassian CLI): installer from the Atlassian TWG page → lands in ~/.local/bin/twg ; add to PATH</code></pre>
-<p>Check: <code>claude --version</code>, <code>twg --version</code>, <code>aws --version</code>, <code>dotnet --version</code>, <code>/opt/homebrew/opt/mysql-client/bin/mysql --version</code>, <code>sqlcmd --version</code>.</p>
+curl -fsSL --retry 2 https://teamwork-graph.atlassian.com/cli/install | bash   # twg (Atlassian Teamwork Graph CLI) → ~/.local/bin/twg, opens the OAuth login</code></pre>
+<p>Native Windows (PowerShell): <code>winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL</code>, sqlcmd from the Microsoft installer, and twg with <code>curl.exe -fsSL https://teamwork-graph.atlassian.com/cli/install.ps1 -o twg-install.ps1; powershell -ExecutionPolicy Bypass -File .\twg-install.ps1</code> (installs to <code>%LOCALAPPDATA%\Programs\twg\bin</code>, adds it to PATH — open a new window). Docs: <a href="https://developer.atlassian.com/cloud/twg-cli/getting-started/installation/">TWG CLI installation</a>.</p>
+<p>Check:<code>claude --version</code>, <code>twg --version</code>, <code>aws --version</code>, <code>dotnet --version</code>, <code>/opt/homebrew/opt/mysql-client/bin/mysql --version</code>, <code>sqlcmd --version</code>.</p>
 
 <h2>3. Clone the workspace (folder names matter)</h2>
 <p>Fastest: clone the kit, then run its clone script — it clones the five product checkouts on their working branches and skips any folder that already exists (<code>.\clone.ps1</code> on native Windows; add <code>--bootstrap</code> / <code>-Bootstrap</code> to install the kit in the same run).</p>

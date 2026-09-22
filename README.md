@@ -32,6 +32,11 @@ each developer's own OAuth logins; this repo only says *where* they are.
 macOS / Linux / WSL. On native Windows, same steps in PowerShell — see [Windows](#windows) below.
 
 ```bash
+# 0. Tools (once) — Homebrew on macOS; apt/brew on Linux/WSL. .NET SDK 8: https://dotnet.microsoft.com/download
+brew install git awscli node python@3.12 mysql-client sqlcmd
+npm install -g @anthropic-ai/claude-code
+curl -fsSL --retry 2 https://teamwork-graph.atlassian.com/cli/install | bash   # twg (Atlassian Teamwork Graph CLI) → ~/.local/bin/twg, opens the OAuth login
+
 # 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
 mkdir -p ~/Projects/AspireDigital && cd ~/Projects/AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
@@ -43,7 +48,7 @@ git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
 # 3. Authenticate the things only you can authenticate
 claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
-twg               # first run opens the Atlassian OAuth login for the twg CLI
+twg login         # only if you skipped the login during install; then `twg doctor`
 aws sso login     # or configure the ap-southeast-1 profile you were given
 # open the DB tunnels you were given (ports in access/ACCESS.md)
 
@@ -61,8 +66,11 @@ Two ways, both supported:
 - **Native PowerShell** — `clone.ps1` / `bootstrap.ps1` / `doctor.ps1` do the same as the shell scripts. Same four steps, in a PowerShell window (Windows PowerShell 5.1 or 7):
 
 ```powershell
-# 0. Tools (once). sqlcmd: Microsoft installer; twg: its Windows installer (%LOCALAPPDATA%\Programs\twg\bin — add to PATH)
+# 0. Tools (once). sqlcmd: Microsoft installer (https://learn.microsoft.com/sql/tools/sqlcmd)
 winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL
+curl.exe -fsSL https://teamwork-graph.atlassian.com/cli/install.ps1 -o twg-install.ps1   # twg (Atlassian Teamwork Graph CLI)
+powershell -ExecutionPolicy Bypass -File .\twg-install.ps1                                # → %LOCALAPPDATA%\Programs\twg\bin, added to PATH, opens the OAuth login
+# open a NEW PowerShell window afterwards so PATH picks up twg
 
 # 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
 mkdir C:\Projects\AspireDigital; cd C:\Projects\AspireDigital
@@ -74,8 +82,7 @@ powershell -ExecutionPolicy Bypass -File .\ai-workspace\bootstrap.ps1
 
 # 3. Authenticate the things only you can authenticate
 claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
-twg               # first run opens the Atlassian OAuth login; token from clipboard if asked:
-                  #   Get-Clipboard | Set-Content -NoNewline $env:USERPROFILE\.config\atlassian\token
+twg login         # only if you skipped the login during install; then `twg doctor`
 aws sso login     # or configure the ap-southeast-1 profile you were given
 # DB tunnels: ssh -N -L 3375:... user@bastion in its own PowerShell window (ports in access\ACCESS.md)
 
