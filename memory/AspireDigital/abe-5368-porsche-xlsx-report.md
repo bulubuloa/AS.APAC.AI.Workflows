@@ -6,7 +6,7 @@ metadata:
   type: project
 ---
 
-ABE-5368 (Porsche-Specific Job Report Export, epic ABE-5321). Spec + full 49-column mapping at `OmnicasaAS/issues/ABE-5368.md`, artifact https://claude.ai/code/artifact/91ffabe4-9949-46cd-be38-663d0199d979. Jessie's 2026-09-07 comment "Split into 2 US - 21p" — the split matches the repo boundary below. See [[abe-5320-porsche-dealer-sync]], [[abe-4681-vehicle-fields]].
+ABE-5368 (Porsche-Specific Job Report Export, epic ABE-5321). Spec + full 49-column mapping at `AspireDigital/issues/ABE-5368.md`, artifact https://claude.ai/code/artifact/91ffabe4-9949-46cd-be38-663d0199d979. Jessie's 2026-09-07 comment "Split into 2 US - 21p" — the split matches the repo boundary below. See [[abe-5320-porsche-dealer-sync]], [[abe-4681-vehicle-fields]].
 
 **Verified 2026-09-08 against live SIT:**
 - PTH client ids: RSA SIT `cloud.Client` **2209**, Benefit SIT `Aspire.clients.Id` **678** (ClientIdExternal 2209). UAT: RSA **2034**, Benefit `AspireProdBackup.Id` **555**. Lookalike trap: RSA `2129 | PHT | Tyler Client` is NOT Porsche.

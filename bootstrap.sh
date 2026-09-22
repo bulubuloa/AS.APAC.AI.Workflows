@@ -57,7 +57,7 @@ link_memory() { # $1 = folder the agent runs in, $2 = kit memory name
   [ -L "$proj/memory" ] && rm "$proj/memory"
   ln -s "$target" "$proj/memory"; say "memory: $1 → memory/$2"
 }
-link_memory "$WS" OmnicasaAS
+link_memory "$WS" AspireDigital
 [ -d "$WS/ABCB" ]       && link_memory "$WS/ABCB" ABCB
 [ -d "$WS/ABCB.Clone" ] && link_memory "$WS/ABCB.Clone" ABCB
 [ -d "$WS/ABMB" ]       && link_memory "$WS/ABMB" ABMB

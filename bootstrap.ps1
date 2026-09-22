@@ -17,7 +17,7 @@ function Backup($path, $incoming) {  # copy aside unless identical
   }
 }
 # Claude Code keys project memory by the absolute path with every non-alphanumeric character turned into '-'
-# e.g. C:\Users\me\Projects\OmnicasaAS -> C--Users-me-Projects-OmnicasaAS
+# e.g. C:\Users\me\Projects\AspireDigital -> C--Users-me-Projects-AspireDigital
 function Slug($p) { return ($p -replace '[^A-Za-z0-9]', '-') }
 
 Say "workspace: $WS"
@@ -65,7 +65,7 @@ function Link-Memory($folder, $kitName) {
   if ((Test-Path $mem) -and (Get-Item $mem).LinkType) { (Get-Item $mem).Delete() }
   New-Item -ItemType Junction -Path $mem -Target $target | Out-Null; Say "memory: $folder -> memory\$kitName"
 }
-Link-Memory $WS 'OmnicasaAS'
+Link-Memory $WS 'AspireDigital'
 foreach ($p in @('ABCB','ABCB.Clone')) { if (Test-Path (Join-Path $WS $p)) { Link-Memory (Join-Path $WS $p) 'ABCB' } }
 if (Test-Path (Join-Path $WS 'ABMB')) { Link-Memory (Join-Path $WS 'ABMB') 'ABMB' }
 

@@ -33,7 +33,7 @@ macOS / Linux / WSL. On native Windows, same steps in PowerShell — see [Window
 
 ```bash
 # 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
-mkdir -p ~/Projects/OmnicasaAS && cd ~/Projects/OmnicasaAS
+mkdir -p ~/Projects/AspireDigital && cd ~/Projects/AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 ./ai-workspace/clone.sh   # ABMB, ABVB, ABF, ABCB (data-processer-pre-production), ABCB.Clone (develop); skips what exists
                           # (or `./ai-workspace/clone.sh --bootstrap` to do steps 1 and 2 in one go)
@@ -57,7 +57,7 @@ Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and aft
 
 Two ways, both supported:
 
-- **WSL2 (recommended)** — install Ubuntu from the Store, clone the repos *inside* the WSL filesystem (`~/Projects/OmnicasaAS`, not `/mnt/c/...` — git and builds are far faster), install the tools with `apt`/`brew`-for-Linux, and run `./ai-workspace/bootstrap.sh` unchanged. Claude Code, Codex, twg, aws, dotnet, mysql-client, sqlcmd, Playwright and the SSH tunnels all work in WSL. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
+- **WSL2 (recommended)** — install Ubuntu from the Store, clone the repos *inside* the WSL filesystem (`~/Projects/AspireDigital`, not `/mnt/c/...` — git and builds are far faster), install the tools with `apt`/`brew`-for-Linux, and run `./ai-workspace/bootstrap.sh` unchanged. Claude Code, Codex, twg, aws, dotnet, mysql-client, sqlcmd, Playwright and the SSH tunnels all work in WSL. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
 - **Native PowerShell** — `clone.ps1` / `bootstrap.ps1` / `doctor.ps1` do the same as the shell scripts. Same four steps, in a PowerShell window (Windows PowerShell 5.1 or 7):
 
 ```powershell
@@ -65,7 +65,7 @@ Two ways, both supported:
 winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL
 
 # 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
-mkdir C:\Projects\OmnicasaAS; cd C:\Projects\OmnicasaAS
+mkdir C:\Projects\AspireDigital; cd C:\Projects\AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 powershell -ExecutionPolicy Bypass -File .\ai-workspace\clone.ps1      # add -Bootstrap to do steps 1 and 2 in one go
 
@@ -83,7 +83,7 @@ aws sso login     # or configure the ap-southeast-1 profile you were given
 powershell -ExecutionPolicy Bypass -File .\ai-workspace\doctor.ps1
 ```
 
-  Notes: `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\OmnicasaAS` → `C--Projects-OmnicasaAS`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
+  Notes: `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\AspireDigital` → `C--Projects-AspireDigital`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
 
 Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
 

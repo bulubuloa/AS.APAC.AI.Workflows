@@ -1,4 +1,4 @@
-# OmnicasaAS workspace — APAC Aspire Digital (International SOS)
+# AspireDigital workspace — APAC Aspire Digital (International SOS)
 
 This folder holds the Aspire Benefit / RoadSide repositories side by side. Read this file first; then the
 repo's own `CLAUDE.md`; then the memory notes (loaded automatically — `MEMORY.md` is the index). The kit that

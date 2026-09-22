@@ -1,7 +1,7 @@
 """Markdown (audit docs) -> Confluence HTML. Two passes: pass1 creates pages (diagram placeholders), pass2 embeds PNGs + resolves links."""
 import re, os, json, html, glob, markdown
 
-SRC = "/Users/hoangq/Projects/OmnicasaAS/ai-workspace/issues/cms-only-provider-audit"
+SRC = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "issues", "cms-only-provider-audit"))
 OUT = os.path.dirname(os.path.abspath(__file__))
 PARENT = "6838452246"
 

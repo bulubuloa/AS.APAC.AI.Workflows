@@ -8,7 +8,7 @@ metadata:
   modified: 2026-08-18T08:13:22.546Z
 ---
 
-ABE-5320 (Sprint 68, Critical): sync Porsche dealers CMS→RSA and allow them as job Client Target. Analysis + plan live at `OmnicasaAS/issues/ABE-5320.md` (artifact https://claude.ai/code/artifact/751a4bde-1d34-49e4-844a-f6c3cdfbce87). Spans ABVB + ABF + ABMB — see [[abe-repo-aliases-and-cms-modules]], [[abmb-roadside-cicd]].
+ABE-5320 (Sprint 68, Critical): sync Porsche dealers CMS→RSA and allow them as job Client Target. Analysis + plan live at `AspireDigital/issues/ABE-5320.md` (artifact https://claude.ai/code/artifact/751a4bde-1d34-49e4-844a-f6c3cdfbce87). Spans ABVB + ABF + ABMB — see [[abe-repo-aliases-and-cms-modules]], [[abmb-roadside-cicd]].
 
 **Verified 2026-08-18 against live prod/UAT (no assumptions):**
 - Dealer sync gate is `ABVB VendorService.cs:3086` (`SyncDataToRSADealerVer2`): only `honda_rsa`→`HOT`, `mercedes_benz_rsa`→`MBZ`; the `else` returns **Success with an empty payload**, so an unmapped brand silently never syncs. Legacy v1 twin at `:3024` keyed on masterdata `HONDA_RSA`/`BENZ_RSA`.
