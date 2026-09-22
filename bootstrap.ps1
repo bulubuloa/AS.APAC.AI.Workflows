@@ -1,6 +1,7 @@
-# Installs the ai-workspace kit on Windows (native PowerShell 5.1+ / 7). Idempotent; backs up what it replaces.
+# One-shot setup on Windows (native PowerShell 5.1+ / 7): tools (winget, twg, Zscaler CA bundle), product repos, then
+# the kit itself. Idempotent; backs up what it replaces. Skip parts with -NoTools / -NoClone.
 # WSL2 users: run ./bootstrap.sh inside WSL instead — it works unchanged there.
-[CmdletBinding()] param([string]$Workspace, [switch]$WithCodex)
+[CmdletBinding()] param([string]$Workspace, [switch]$WithCodex, [switch]$NoTools, [switch]$NoClone)
 $ErrorActionPreference = 'Stop'
 $Kit = $PSScriptRoot
 $WS  = if ($Workspace) { (Resolve-Path $Workspace).Path } else { Split-Path $Kit -Parent }
@@ -22,6 +23,11 @@ function Slug($p) { return ($p -replace '[^A-Za-z0-9]', '-') }
 
 Say "workspace: $WS"
 if (-not (Test-Path $WS)) { throw "workspace folder not found: $WS (pass -Workspace)" }
+
+# 0. Tools and product repos (each script is idempotent on its own)
+if (-not $NoTools) { & (Join-Path $Kit 'tools.ps1') }
+if (-not $NoClone) { & (Join-Path $Kit 'clone.ps1') -Workspace $WS }
+$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
 
 # 1. Global preferences
 New-Item -ItemType Directory -Force $ClaudeHome | Out-Null
@@ -104,4 +110,4 @@ if (Test-Path (Join-Path $Kit '.git')) {
   "#!/usr/bin/env bash`ngit diff --cached -U0 -- . ':(exclude)claude/secret-guard.pl' | perl `"`$(git rev-parse --show-toplevel)/claude/secret-guard.pl`" || { echo `"pre-commit: staged diff looks like it contains a credential - point at the secret name instead`"; exit 1; }`n" | Set-Content -NoNewline -Encoding ascii $hook
   Say 'installed secret guard (pre-commit)'
 }
-Say 'done. Next: claude -> /mcp (authenticate atlassian-isos); twg; aws login --region ap-southeast-1; open tunnels (access\ACCESS.md); then .\doctor.ps1'
+Say "done. Open a NEW PowerShell window, then the three logins only you can do:`n     claude   -> /mcp -> atlassian-isos -> Authenticate`n     twg login`n     aws login --region ap-southeast-1`n   then .\doctor.ps1 (DB tunnels: access\ACCESS.md)"

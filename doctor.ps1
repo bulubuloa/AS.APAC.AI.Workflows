@@ -4,7 +4,7 @@ $Kit = $PSScriptRoot; $WS = if ($Workspace) { (Resolve-Path $Workspace).Path } e
 $ClaudeHome = Join-Path $env:USERPROFILE '.claude'
 function OK($m)  { Write-Host "  OK   $m" -ForegroundColor Green }
 function Bad($m) { Write-Host "  MISS $m" -ForegroundColor Red }
-function Have($c) { [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+function Have($c) { $cmd = Get-Command $c -ErrorAction SilentlyContinue; if (-not $cmd) { return $false }; return ($cmd.Source -notmatch '\\WindowsApps\\') }  # WindowsApps = Store stub, not a real install
 function Slug($p) { return ($p -replace '[^A-Za-z0-9]', '-') }
 
 Write-Host 'tools'

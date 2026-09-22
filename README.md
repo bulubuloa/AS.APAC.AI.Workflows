@@ -24,75 +24,57 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `access/ACCESS.md` | Access recipes: which tunnel port is which database, which secret holds which connection string, AWS account, CMS environments, mail rules | read by the agent via `workspace/CLAUDE.md` |
 | `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
-| `clone.sh` / `clone.ps1` | Clone the five product checkouts side by side on their working branches (`--bootstrap` / `-Bootstrap` chains the install) | — |
-| `bootstrap.sh` / `doctor.sh` | Install into a fresh machine / verify the setup | — |
+| `tools.sh` / `tools.ps1` | Install the CLIs (brew/apt / winget, Claude Code, twg, python helpers; Windows: Zscaler CA bundle) | called by bootstrap |
+| `clone.sh` / `clone.ps1` | Clone the five product checkouts side by side on their working branches | called by bootstrap |
+| `bootstrap.sh` / `bootstrap.ps1` | One-shot setup: tools -> repos -> kit (global + workspace + per-repo instructions, commands, permissions, MCP, memory links) | — |
+| `doctor.sh` / `doctor.ps1` | Verify the setup, one line per check | — |
 
 ## Take over in 15 minutes
 
-macOS / Linux / WSL. On native Windows, same steps in PowerShell — see [Windows](#windows) below.
+Three steps on every platform: clone the kit, run its bootstrap, do the three logins only you can do.
+
+**macOS / Linux / WSL**
 
 ```bash
-# 0. Tools (once) — Homebrew on macOS; apt/brew on Linux/WSL. .NET SDK 8: https://dotnet.microsoft.com/download
-brew install git awscli node python@3.12 mysql-client sqlcmd
-npm install -g @anthropic-ai/claude-code
-curl -fsSL --retry 2 https://teamwork-graph.atlassian.com/cli/install | bash   # twg (Atlassian Teamwork Graph CLI) → ~/.local/bin/twg, opens the OAuth login
-
-# 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
+# 1. Clone the kit into a fresh workspace folder (the product repos land next to it)
 mkdir -p ~/Projects/AspireDigital && cd ~/Projects/AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
-./ai-workspace/clone.sh   # ABMB, ABVB, ABF, ABCB (data-processer-pre-production), ABCB.Clone (develop); skips what exists
-                          # (or `./ai-workspace/clone.sh --bootstrap` to do steps 1 and 2 in one go)
 
-# 2. Install the kit (idempotent; backs up anything it replaces)
-./ai-workspace/bootstrap.sh
+# 2. Bootstrap: tools (brew/apt, Claude Code, twg), the five product repos on their working branches, the kit itself
+./ai-workspace/bootstrap.sh        # idempotent - re-run any time; NO_TOOLS=1 / NO_CLONE=1 skip those parts
 
-# 3. Authenticate the things only you can authenticate
-claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
-twg login         # only if you skipped the login during install; then `twg doctor`
-aws login --region ap-southeast-1   # browser console sign-in (IAM user); session expires - re-run when needed. No browser / long-lived: aws configure with an access key
-# open the DB tunnels you were given (ports in access/ACCESS.md)
-
-# 4. Check
+# 3. Log in (browser opens each time), then check
+claude                             # /mcp -> atlassian-isos -> Authenticate  (Jira/Confluence, your ISOS account)
+twg login                          # only if the twg installer did not already log you in
+aws login --region ap-southeast-1  # console sign-in; session expires, re-run when needed (no browser: aws configure + access key)
 ./ai-workspace/doctor.sh
 ```
 
-Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
-
-## Windows
-
-Two ways, both supported:
-
-- **WSL2 (recommended)** — install Ubuntu from the Store, clone the repos *inside* the WSL filesystem (`~/Projects/AspireDigital`, not `/mnt/c/...` — git and builds are far faster), install the tools with `apt`/`brew`-for-Linux, and run `./ai-workspace/bootstrap.sh` unchanged. Claude Code, Codex, twg, aws, dotnet, mysql-client, sqlcmd, Playwright and the SSH tunnels all work in WSL. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
-- **Native PowerShell** — `clone.ps1` / `bootstrap.ps1` / `doctor.ps1` do the same as the shell scripts. Same four steps, in a PowerShell window (Windows PowerShell 5.1 or 7):
+**Windows (native PowerShell 5.1 / 7)** — same three steps. Say *Yes* to the UAC prompts winget raises for machine-wide installers.
 
 ```powershell
-# 0. Tools (once). sqlcmd: Microsoft installer (https://learn.microsoft.com/sql/tools/sqlcmd)
-winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL
-curl.exe -fsSL https://teamwork-graph.atlassian.com/cli/install.ps1 -o twg-install.ps1   # twg (Atlassian Teamwork Graph CLI)
-powershell -ExecutionPolicy Bypass -File .\twg-install.ps1                                # → %LOCALAPPDATA%\Programs\twg\bin, added to PATH, opens the OAuth login
-# open a NEW PowerShell window afterwards so PATH picks up twg
-
-# 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
 mkdir C:\Projects\AspireDigital; cd C:\Projects\AspireDigital
-git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
-powershell -ExecutionPolicy Bypass -File .\ai-workspace\clone.ps1      # add -Bootstrap to do steps 1 and 2 in one go
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace     # no git yet? winget install Git.Git, open a new window
 
-# 2. Install the kit (idempotent; backs up anything it replaces)
-powershell -ExecutionPolicy Bypass -File .\ai-workspace\bootstrap.ps1
+powershell -ExecutionPolicy Bypass -File .\ai-workspace\bootstrap.ps1   # tools via winget + twg installer, Zscaler CA bundle, repos, kit; -NoTools / -NoClone
 
-# 3. Authenticate the things only you can authenticate
-claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
-twg login         # only if you skipped the login during install; then `twg doctor`
-aws login --region ap-southeast-1   # browser console sign-in (IAM user); session expires - re-run when needed. No browser / long-lived: aws configure with an access key
-# DB tunnels: ssh -N -L 3375:... user@bastion in its own PowerShell window (ports in access\ACCESS.md)
-
-# 4. Check
+# NEW PowerShell window (PATH), then:
+claude                             # /mcp -> atlassian-isos -> Authenticate
+twg login
+aws login --region ap-southeast-1
 powershell -ExecutionPolicy Bypass -File .\ai-workspace\doctor.ps1
 ```
 
-  Notes: `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\AspireDigital` → `C--Projects-AspireDigital`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
+DB tunnels (`ssh -N -L 3375:…`) are per person — ports and hosts in `access/ACCESS.md`.
 
-Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
+Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
+
+## Windows notes
+
+- **WSL2 is also fine** — install Ubuntu from the Store, keep the workspace *inside* the WSL filesystem (`~/Projects/AspireDigital`, not `/mnt/c/...` — git and builds are far faster) and use the macOS/Linux steps unchanged. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
+- **Corporate TLS (Zscaler)** — python/node-based CLIs (aws, pip, npx) reject the proxy's certificate out of the box (`CERTIFICATE_VERIFY_FAILED`). `tools.ps1` detects the Zscaler root in the Windows store, writes `~\.aws\ca-bundle.pem` (public CAs + Zscaler) and sets `AWS_CA_BUNDLE`, `REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`, `NODE_EXTRA_CA_CERTS` for your user. Open a new window afterwards.
+- `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\AspireDigital` → `C--Projects-AspireDigital`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
+- Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
 
 ## Codex CLI instead of Claude Code
 

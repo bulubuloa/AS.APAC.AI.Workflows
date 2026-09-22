@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Installs the ai-workspace kit into this machine's Claude Code setup. Idempotent; backs up what it replaces.
+# One-shot setup: tools (brew/apt, Claude Code, twg), product repos, then the kit itself. Idempotent; backs up what it
+# replaces. Skip parts with NO_TOOLS=1 / NO_CLONE=1.
 set -euo pipefail
 
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,6 +11,11 @@ STAMP="$(date +%Y%m%d%H%M%S)"
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn\033[0m %s\n' "$*"; }
 backup() { [ -e "$1" ] && [ ! -L "$1" ] && ! cmp -s "$1" "${2:-/dev/null}" && cp -a "$1" "$1.bak-$STAMP" && warn "backed up $1 → $1.bak-$STAMP" || true; }  # $2 = incoming file: no backup when identical
+
+# 0. Tools and product repos (each script is idempotent on its own)
+[ -n "${NO_TOOLS:-}" ] || bash "$KIT/tools.sh"
+[ -n "${NO_CLONE:-}" ] || bash "$KIT/clone.sh" "$WS"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Claude Code keys project memory by the absolute path of the folder, with '/' replaced by '-'.
 slug() { printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g'; }  # Claude Code turns every non-alphanumeric character of the path into '-'
@@ -97,4 +103,8 @@ if [ -d "$KIT/.git" ]; then
   chmod +x "$KIT/.git/hooks/pre-commit"; say "installed secret guard (pre-commit)"
 fi
 
-say "done. Next: claude → /mcp (authenticate atlassian-isos); twg (OAuth); aws login --region ap-southeast-1; open tunnels (access/ACCESS.md); then ./doctor.sh"
+say "done. The three logins only you can do:
+     claude   -> /mcp -> atlassian-isos -> Authenticate
+     twg login                          (if the installer did not already log you in)
+     aws login --region ap-southeast-1
+   then ./doctor.sh (DB tunnels: access/ACCESS.md)"

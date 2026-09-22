@@ -1,7 +1,7 @@
 # Clones the product repos side by side into the workspace (the kit's parent folder by default), each on the
 # branch that feeds the first test environment. Idempotent: existing folders are left alone. Uses your own
-# Bitbucket credential (Git Credential Manager prompts). Usage: .\clone.ps1 [-Workspace path] [-Bootstrap]
-[CmdletBinding()] param([string]$Workspace, [switch]$Bootstrap)
+# Bitbucket credential (Git Credential Manager prompts). Called by bootstrap.ps1; standalone: .\clone.ps1 [-Workspace path]
+[CmdletBinding()] param([string]$Workspace)
 $ErrorActionPreference = 'Stop'
 $Kit = $PSScriptRoot
 $WS  = if ($Workspace) { $Workspace } else { Split-Path $Kit -Parent }
@@ -23,5 +23,4 @@ foreach ($r in $Repos) {
   git clone -b $r.Branch "$BB/$($r.Repo).git" $dir
   if ($LASTEXITCODE -ne 0) { throw "git clone failed for $($r.Repo)" }
 }
-Say "done. Next: $Kit\bootstrap.ps1"
-if ($Bootstrap) { & (Join-Path $Kit 'bootstrap.ps1') -Workspace $WS }
+Say "repos ready in $WS"
