@@ -16,6 +16,7 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `claude/commands/*.md` | Slash commands for the whole loop: `/task-fetch` (Jira → task file), `/task-analyse` (read-only analysis), `/task-implement` (branch from the right base, code, build, tests, commits), `/task-verify` (evidence: browser, DB, logs), `/task-deliver` (PR text, QA comment, release notes, memory), `/task-run` (all of them, with pauses / `--cowork` / `--auto`) | `<workspace>/.claude/commands/` |
 | `codex/` | The same for OpenAI Codex CLI: `config.snippet.toml` (MCP servers, sandbox), `prompts/` (`/prompts:task-*`), `AGENTS.preamble.md` (how Codex reads/writes the shared memory) | `~/.codex/`, `AGENTS.md` next to each `CLAUDE.md` |
 | `claude/settings.json` | Permission allow/deny rules: reads silent, writes prompted | `<workspace>/.claude/settings.json` |
+| `claude/mcp.json` | MCP servers as a project config file (`atlassian-isos` HTTP, `playwright` stdio) | `<workspace>/.mcp.json` and `<repo>/.mcp.json` (git-excluded) |
 | `claude/mcp.sh` | The MCP servers to register (Atlassian, Playwright) | `claude mcp add …` (user scope) |
 | `workspace/CLAUDE.md` | Workspace instructions: repo map, branch → environment, environments, access, conventions, where the docs are | `<workspace>/CLAUDE.md` |
 | `workspace/repos/<REPO>/CLAUDE.md` | Per-repo instructions (ABCB, ABMB, ABF, ABVB) | `<workspace>/<repo dir>/CLAUDE.md` |
@@ -23,19 +24,19 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `access/ACCESS.md` | Access recipes: which tunnel port is which database, which secret holds which connection string, AWS account, CMS environments, mail rules | read by the agent via `workspace/CLAUDE.md` |
 | `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
+| `clone.sh` / `clone.ps1` | Clone the five product checkouts side by side on their working branches (`--bootstrap` / `-Bootstrap` chains the install) | — |
 | `bootstrap.sh` / `doctor.sh` | Install into a fresh machine / verify the setup | — |
 
 ## Take over in 15 minutes
 
+macOS / Linux / WSL. On native Windows, same steps in PowerShell — see [Windows](#windows) below.
+
 ```bash
-# 1. Clone the product repos side by side (names matter — the agent knows them by these names)
+# 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
 mkdir -p ~/Projects/OmnicasaAS && cd ~/Projects/OmnicasaAS
-git clone https://bitbucket.org/internationalsos/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
-git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB
-git clone https://bitbucket.org/internationalsos/apac-benefits-frontend.git             Omnicasa.Mobile.ABF
-git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB          # data-processer-* branches
-git clone https://bitbucket.org/internationalsos/apac-benefit-client-backend.git        Omnicasa.Mobile.ABCB.Clone    # develop (ClientService.API)
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
+./ai-workspace/clone.sh   # ABMB, ABVB, ABF, ABCB (data-processer-pre-production), ABCB.Clone (develop); skips what exists
+                          # (or `./ai-workspace/clone.sh --bootstrap` to do steps 1 and 2 in one go)
 
 # 2. Install the kit (idempotent; backs up anything it replaces)
 ./ai-workspace/bootstrap.sh
@@ -57,7 +58,32 @@ Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and aft
 Two ways, both supported:
 
 - **WSL2 (recommended)** — install Ubuntu from the Store, clone the repos *inside* the WSL filesystem (`~/Projects/OmnicasaAS`, not `/mnt/c/...` — git and builds are far faster), install the tools with `apt`/`brew`-for-Linux, and run `./ai-workspace/bootstrap.sh` unchanged. Claude Code, Codex, twg, aws, dotnet, mysql-client, sqlcmd, Playwright and the SSH tunnels all work in WSL. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
-- **Native PowerShell** — `.\bootstrap.ps1` / `.\doctor.ps1` do the same as the shell scripts: memory and `issues/` become directory **junctions** (no admin rights needed), the project slug follows Claude Code's Windows rule (`C:\Users\me\Projects\OmnicasaAS` → `C--Users-me-Projects-OmnicasaAS`), the pre-commit guard runs under Git for Windows' bash + perl. Tools: `winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL`, `sqlcmd` from the Microsoft installer, twg's Windows installer (`%LOCALAPPDATA%\Programs\twg\bin\twg.exe` — add to PATH). Clipboard for the Atlassian token: `Get-Clipboard | Set-Content -NoNewline $env:USERPROFILE\.config\atlassian\token`. Tunnels: `ssh -N -L 3375:... user@bastion` in a PowerShell window, same ports.
+- **Native PowerShell** — `clone.ps1` / `bootstrap.ps1` / `doctor.ps1` do the same as the shell scripts. Same four steps, in a PowerShell window (Windows PowerShell 5.1 or 7):
+
+```powershell
+# 0. Tools (once). sqlcmd: Microsoft installer; twg: its Windows installer (%LOCALAPPDATA%\Programs\twg\bin — add to PATH)
+winget install Anthropic.ClaudeCode Amazon.AWSCLI Git.Git OpenJS.NodeJS Python.Python.3.12 Microsoft.DotNet.SDK.8 Oracle.MySQL
+
+# 1. Clone the kit, then let it clone the product repos side by side (folder names and branches matter)
+mkdir C:\Projects\OmnicasaAS; cd C:\Projects\OmnicasaAS
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
+powershell -ExecutionPolicy Bypass -File .\ai-workspace\clone.ps1      # add -Bootstrap to do steps 1 and 2 in one go
+
+# 2. Install the kit (idempotent; backs up anything it replaces)
+powershell -ExecutionPolicy Bypass -File .\ai-workspace\bootstrap.ps1
+
+# 3. Authenticate the things only you can authenticate
+claude            # then /mcp → atlassian-isos → Authenticate (Jira/Confluence, your ISOS account)
+twg               # first run opens the Atlassian OAuth login; token from clipboard if asked:
+                  #   Get-Clipboard | Set-Content -NoNewline $env:USERPROFILE\.config\atlassian\token
+aws sso login     # or configure the ap-southeast-1 profile you were given
+# DB tunnels: ssh -N -L 3375:... user@bastion in its own PowerShell window (ports in access\ACCESS.md)
+
+# 4. Check
+powershell -ExecutionPolicy Bypass -File .\ai-workspace\doctor.ps1
+```
+
+  Notes: `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\OmnicasaAS` → `C--Projects-OmnicasaAS`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
 
 Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
 

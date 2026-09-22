@@ -38,7 +38,8 @@ if (-not (Test-Path $issues)) { New-Item -ItemType Junction -Path $issues -Targe
 Backup (Join-Path $WS 'CLAUDE.md') (Join-Path $Kit 'workspace\CLAUDE.md'); Copy-Item (Join-Path $Kit 'workspace\CLAUDE.md') (Join-Path $WS 'CLAUDE.md')
 Get-ChildItem (Join-Path $Kit 'claude\commands\*.md') | Copy-Item -Destination (Join-Path $WS '.claude\commands')
 Backup (Join-Path $WS '.claude\settings.json') (Join-Path $Kit 'claude\settings.json'); Copy-Item (Join-Path $Kit 'claude\settings.json') (Join-Path $WS '.claude\settings.json')
-Say "installed workspace CLAUDE.md, $((Get-ChildItem (Join-Path $Kit 'claude\commands\*.md')).Count) commands, settings.json"
+Backup (Join-Path $WS '.mcp.json') (Join-Path $Kit 'claude\mcp.json'); Copy-Item (Join-Path $Kit 'claude\mcp.json') (Join-Path $WS '.mcp.json')
+Say "installed workspace CLAUDE.md, $((Get-ChildItem (Join-Path $Kit 'claude\commands\*.md')).Count) commands, settings.json, .mcp.json"
 
 # 3. Per-repo instructions
 Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
@@ -46,8 +47,9 @@ Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
   foreach ($dir in @((Join-Path $WS "Omnicasa.Mobile.$name"), (Join-Path $WS "Omnicasa.Mobile.$name.Clone"))) {
     if (Test-Path $dir) {
       Backup (Join-Path $dir 'CLAUDE.md') (Join-Path $_.FullName 'CLAUDE.md'); Copy-Item (Join-Path $_.FullName 'CLAUDE.md') (Join-Path $dir 'CLAUDE.md'); Say "installed $dir\CLAUDE.md"
+      Backup (Join-Path $dir '.mcp.json') (Join-Path $Kit 'claude\mcp.json'); Copy-Item (Join-Path $Kit 'claude\mcp.json') (Join-Path $dir '.mcp.json')
       $ex = Join-Path $dir '.git\info\exclude'
-      if (Test-Path (Join-Path $dir '.git')) { New-Item -ItemType Directory -Force (Split-Path $ex) | Out-Null; foreach ($f in 'CLAUDE.md','AGENTS.md','*.bak-*') { if (-not (Test-Path $ex) -or -not (Select-String -Path $ex -Pattern "^$([regex]::Escape($f))$" -Quiet)) { Add-Content $ex $f } } }
+      if (Test-Path (Join-Path $dir '.git')) { New-Item -ItemType Directory -Force (Split-Path $ex) | Out-Null; foreach ($f in 'CLAUDE.md','AGENTS.md','.mcp.json','*.bak-*') { if (-not (Test-Path $ex) -or -not (Select-String -Path $ex -Pattern "^$([regex]::Escape($f))$" -Quiet)) { Add-Content $ex $f } } }
     }
   }
 }
@@ -67,10 +69,12 @@ Link-Memory $WS 'OmnicasaAS'
 foreach ($p in @('Omnicasa.Mobile.ABCB','Omnicasa.Mobile.ABCB.Clone')) { if (Test-Path (Join-Path $WS $p)) { Link-Memory (Join-Path $WS $p) 'ABCB' } }
 if (Test-Path (Join-Path $WS 'Omnicasa.Mobile.ABMB')) { Link-Memory (Join-Path $WS 'Omnicasa.Mobile.ABMB') 'ABMB' }
 
-# 5. MCP servers (user scope)
+# 5. MCP servers (user scope). PS 5.1 turns a native command's stderr into a terminating error under 'Stop',
+# so probe registration through cmd instead of 2>$null.
+function Has-Mcp($name) { $o = cmd /c "claude mcp get $name 2>nul"; return ($LASTEXITCODE -eq 0 -and $o) }
 if (Get-Command claude -ErrorAction SilentlyContinue) {
-  if (-not (claude mcp get atlassian-isos 2>$null)) { claude mcp add --transport http -s user atlassian-isos https://mcp.atlassian.com/v1/mcp; Say 'mcp: registered atlassian-isos' } else { Say 'mcp: atlassian-isos already registered' }
-  if (-not (claude mcp get playwright 2>$null))     { claude mcp add -s user playwright -- npx -y "@playwright/mcp@latest"; Say 'mcp: registered playwright' } else { Say 'mcp: playwright already registered' }
+  if (-not (Has-Mcp atlassian-isos)) { claude mcp add --transport http -s user atlassian-isos https://mcp.atlassian.com/v1/mcp; Say 'mcp: registered atlassian-isos' } else { Say 'mcp: atlassian-isos already registered' }
+  if (-not (Has-Mcp playwright))     { claude mcp add -s user playwright -- npx -y "@playwright/mcp@latest"; Say 'mcp: registered playwright' } else { Say 'mcp: playwright already registered' }
 } else { Warn 'claude CLI not found - install Claude Code, then run: claude mcp add --transport http -s user atlassian-isos https://mcp.atlassian.com/v1/mcp' }
 
 # 5b. Codex CLI

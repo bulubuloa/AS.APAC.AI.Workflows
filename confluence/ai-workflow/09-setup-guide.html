@@ -23,6 +23,11 @@ npm install -g @anthropic-ai/claude-code  # Claude Code CLI, v2.1+
 <p>Check: <code>claude --version</code>, <code>twg --version</code>, <code>aws --version</code>, <code>dotnet --version</code>, <code>/opt/homebrew/opt/mysql-client/bin/mysql --version</code>, <code>sqlcmd --version</code>.</p>
 
 <h2>3. Clone the workspace (folder names matter)</h2>
+<p>Fastest: clone the kit, then run its clone script — it clones the five product checkouts on their working branches and skips any folder that already exists (<code>.\clone.ps1</code> on native Windows; add <code>--bootstrap</code> / <code>-Bootstrap</code> to install the kit in the same run).</p>
+<pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
+git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
+./ai-workspace/clone.sh</code></pre>
+<p>Or by hand, which is exactly what the script does:</p>
 <pre><code class="language-bash">mkdir -p ~/Projects/OmnicasaAS &amp;&amp; cd ~/Projects/OmnicasaAS
 git clone https://bitbucket.org/internationalsos/apac-booking-modernization-backend.git Omnicasa.Mobile.ABMB
 git clone https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git        Omnicasa.Mobile.ABVB

@@ -29,7 +29,8 @@ if [ -d "$WS/issues" ] && [ ! -L "$WS/issues" ]; then for f in "$WS/issues"/*; d
 backup "$WS/CLAUDE.md" "$KIT/workspace/CLAUDE.md"; cp "$KIT/workspace/CLAUDE.md" "$WS/CLAUDE.md"
 for c in "$KIT"/claude/commands/*.md; do cp "$c" "$WS/.claude/commands/"; done
 backup "$WS/.claude/settings.json" "$KIT/claude/settings.json"; cp "$KIT/claude/settings.json" "$WS/.claude/settings.json"
-say "installed workspace CLAUDE.md, $(ls "$KIT"/claude/commands | wc -l | tr -d ' ') commands, settings.json"
+backup "$WS/.mcp.json" "$KIT/claude/mcp.json"; cp "$KIT/claude/mcp.json" "$WS/.mcp.json"
+say "installed workspace CLAUDE.md, $(ls "$KIT"/claude/commands | wc -l | tr -d ' ') commands, settings.json, .mcp.json"
 
 # 3. Per-repo instructions (only for repos that are checked out)
 for r in "$KIT"/workspace/repos/*/; do
@@ -37,8 +38,9 @@ for r in "$KIT"/workspace/repos/*/; do
   for dir in "$WS/Omnicasa.Mobile.$name" "$WS/Omnicasa.Mobile.$name.Clone"; do
     if [ -d "$dir" ]; then
       backup "$dir/CLAUDE.md" "$r/CLAUDE.md"; cp "$r/CLAUDE.md" "$dir/CLAUDE.md"; say "installed $dir/CLAUDE.md"
+      backup "$dir/.mcp.json" "$KIT/claude/mcp.json"; cp "$KIT/claude/mcp.json" "$dir/.mcp.json"
       # keep the instruction files out of the product repos' commits without touching their .gitignore
-      if [ -d "$dir/.git" ]; then mkdir -p "$dir/.git/info"; for f in CLAUDE.md AGENTS.md "*.bak-*"; do grep -qx "$f" "$dir/.git/info/exclude" 2>/dev/null || echo "$f" >> "$dir/.git/info/exclude"; done; fi
+      if [ -d "$dir/.git" ]; then mkdir -p "$dir/.git/info"; for f in CLAUDE.md AGENTS.md .mcp.json "*.bak-*"; do grep -qx "$f" "$dir/.git/info/exclude" 2>/dev/null || echo "$f" >> "$dir/.git/info/exclude"; done; fi
     fi
   done
 done
