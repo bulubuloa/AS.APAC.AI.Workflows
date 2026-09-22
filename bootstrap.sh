@@ -107,4 +107,4 @@ say "done. The three logins only you can do:
      claude   -> /mcp -> atlassian-isos -> Authenticate
      twg login                          (if the installer did not already log you in)
      aws login --region ap-southeast-1
-   then ./doctor.sh (DB tunnels: access/ACCESS.md)"
+   then ./doctor.sh; DB tunnels: access/tunnel.sh up (needs ~/.ssh/ABE.pem — ask the team, never via git)"

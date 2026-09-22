@@ -22,6 +22,7 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `workspace/repos/<REPO>/CLAUDE.md` | Per-repo instructions (ABCB, ABMB, ABF, ABVB) | `<workspace>/<repo dir>/CLAUDE.md` |
 | `memory/<name>/*.md` | The agent's project memory — every non-obvious fact learned on these projects (env ids, drifted SPs, pipeline quirks, incidents) | symlinked into `~/.claude/projects/<slug>/memory` |
 | `access/ACCESS.md` | Access recipes: which tunnel port is which database, which secret holds which connection string, AWS account, CMS environments, mail rules | read by the agent via `workspace/CLAUDE.md` |
+| `access/tunnels.env`, `tunnel.sh` / `tunnel.ps1` | Bastion + RDS targets per local port (no secrets) and the `up`/`down`/`status` script; the PEM key is yours (`~/.ssh/ABE.pem` or `ABE_SSH_KEY`) | run when you need a database |
 | `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
 | `tools.sh` / `tools.ps1` | Install the CLIs (brew/apt / winget, Claude Code, twg, python helpers; Windows: Zscaler CA bundle) | called by bootstrap |
@@ -65,9 +66,19 @@ aws login --region ap-southeast-1
 powershell -ExecutionPolicy Bypass -File .\ai-workspace\doctor.ps1
 ```
 
-DB tunnels (`ssh -N -L 3375:…`) are per person — ports and hosts in `access/ACCESS.md`.
+DB tunnels: `./ai-workspace/access/tunnel.sh up` (Windows: `access\tunnel.ps1 up`) opens 3375/3382/3383 through the bastion. Hosts and ports are committed in `access/tunnels.env`; the only secret is the bastion key `ABE.pem` — get it from the team out of band, put it at `~/.ssh/ABE.pem` (`chmod 400`) or point `ABE_SSH_KEY` at it. `*.pem` is git-ignored here and the pre-commit guard rejects private keys.
 
 Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and after analysis), or step by step `/task-fetch` → `/task-analyse` → `/task-implement` → `/task-verify` → `/task-deliver`. Codex: `codex` → `/prompts:task-run ABE-xxxx`.
+
+## New device (yours or a teammate's)
+
+1. Clone the kit and run the bootstrap (above) — `access/tunnels.env` and `access/tunnel.sh` come with it.
+2. Put the bastion key at `~/.ssh/ABE.pem` (`chmod 400`). It is the only thing git does not carry: copy it from your
+   other machine (AirDrop / `scp` / password-manager attachment) — never through chat, email or a ticket attachment.
+   Key kept elsewhere? `ABE_SSH_KEY=/path` in your shell profile or in `access/tunnels.local.env` (git-ignored).
+3. The bastion security group (`sg-006ea52049f6aee44`) allows port 22 only from known IPs; on a new network
+   `tunnel.sh up` fails and prints your public IP — send it to whoever manages the SG.
+4. `./ai-workspace/access/tunnel.sh up` then `./ai-workspace/doctor.sh`.
 
 ## Windows notes
 

@@ -3,3 +3,5 @@
 confluence/**/pages/
 confluence/**/pngs.json
 confluence/**/png/
+*.pem
+access/tunnels.local.env

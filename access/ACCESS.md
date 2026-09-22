@@ -8,8 +8,12 @@ keys live only in `~/.aws/credentials`. Either way `aws sts get-caller-identity`
 
 ## Databases
 
-The RDS endpoints are VPN-gated; the developer opens SSH tunnels on fixed local ports and the agent connects to
-`127.0.0.1:<port>`. Ports are a convention shared with the memory notes — keep them.
+The RDS endpoints are private; the developer opens SSH tunnels through the bastion (`ec2-user@` EC2 "Bastion Host"
+`i-04bfdfefcdfb089df`, EIP `13.250.112.53`) on fixed local ports and the agent connects to `127.0.0.1:<port>`.
+`access/tunnel.sh up|down|status [ports]` does it — targets in `tunnels.env` (committed), key = `~/.ssh/ABE.pem` or
+`ABE_SSH_KEY` (handed over out of band, never in git or chat). The bastion security group allows port 22 only from
+known developer IPs (`sg-006ea52049f6aee44`); a new/rotated IP means asking for it to be added. Ports are a
+convention shared with the memory notes — keep them.
 
 | Local port | Target | Schema(s) | Login |
 |---|---|---|---|

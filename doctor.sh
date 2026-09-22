@@ -30,6 +30,7 @@ else ok "codex not installed — skipped"; fi
 echo "access"
 aws sts get-caller-identity --query Account --output text 2>/dev/null | grep -q 739075353953 && ok "AWS account 739075353953" || bad "AWS credentials (aws login --region ap-southeast-1, or aws configure with an access key) — expected account 739075353953"
 aws secretsmanager describe-secret --secret-id benefit-connection-string-preprod >/dev/null 2>&1 && ok "can read secret benefit-connection-string-preprod" || bad "secret benefit-connection-string-preprod not readable"
-for port in 3375:"Benefit SIT/UAT MySQL (benefit-sit cluster)" 3382:"Benefit PROD MySQL (read-only use)" 3383:"RSA PROD MSSQL"; do p="${port%%:*}"; (lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1) && ok "tunnel $p ${port#*:}" || bad "tunnel $p ${port#*:} not listening"; done
+key="${ABE_SSH_KEY:-$HOME/.ssh/ABE.pem}"; [ -r "$key" ] && ok "bastion key $key" || { [ -r "$WS/ABE.pem" ] && ok "bastion key $WS/ABE.pem (move it to ~/.ssh/ABE.pem)" || bad "bastion key: ~/.ssh/ABE.pem or ABE_SSH_KEY (ask the team for ABE.pem — never via git/chat)"; }
+for port in 3375:"Benefit SIT/UAT MySQL (benefit-sit cluster)" 3382:"Benefit PROD MySQL (read-only use)" 3383:"RSA PROD MSSQL"; do p="${port%%:*}"; (lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1) && ok "tunnel $p ${port#*:}" || bad "tunnel $p ${port#*:} not listening (access/tunnel.sh up $p)"; done
 have twg && { twg confluence space get AD >/dev/null 2>&1 && ok "twg Confluence (AD space)" || bad "twg not authenticated (run: twg confluence space get AD)"; }
 echo "done"
