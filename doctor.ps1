@@ -13,13 +13,13 @@ if ((Have 'mysql') -or (Have 'mysqlsh')) { OK 'mysql client' } else { Bad 'mysql
 if (Have 'python') { python -c "import pymysql" *> $null; if ($LASTEXITCODE -eq 0) { OK 'python pymysql' } else { Bad 'python pymysql (pip install pymysql)' } }
 
 Write-Host 'repos'
-foreach ($r in 'ABMB','ABVB','ABF','ABCB','ABCB.Clone') { $d = Join-Path $WS "$r"; if (Test-Path (Join-Path $d '.git')) { OK "$r ($(git -C $d branch --show-current))" } else { Bad "$r missing at $d" } }
+foreach ($r in 'ABMB','ABVB','ABF','ABCB','ABCB.Clone','ABMR') { $d = Join-Path $WS "$r"; if (Test-Path (Join-Path $d '.git')) { OK "$r ($(git -C $d branch --show-current))" } else { Bad "$r missing at $d" } }
 
 Write-Host 'claude config'
 if (Test-Path (Join-Path $ClaudeHome 'CLAUDE.md')) { OK '~\.claude\CLAUDE.md' } else { Bad '~\.claude\CLAUDE.md' }
 if (Test-Path (Join-Path $WS 'CLAUDE.md')) { OK 'workspace CLAUDE.md' } else { Bad 'workspace CLAUDE.md' }
 foreach ($c in 'task-fetch','task-analyse','task-implement','task-verify','task-deliver','task-run') { if (Test-Path (Join-Path $WS ".claude\commands\$c.md")) { OK "/$c" } else { Bad "/$c command" } }
-foreach ($p in @($WS, (Join-Path $WS 'ABCB'), (Join-Path $WS 'ABMB'))) {
+foreach ($p in @($WS, (Join-Path $WS 'ABCB'), (Join-Path $WS 'ABMB'), (Join-Path $WS 'ABMR'))) {
   $mem = Join-Path $ClaudeHome ("projects\" + (Slug $p) + "\memory")
   if ((Test-Path $mem) -and (Get-Item $mem).LinkType) { OK "memory linked: $(Split-Path $p -Leaf) -> $((Get-Item $mem).Target)" } else { Bad "memory not linked for $p (expected $mem)" }
 }

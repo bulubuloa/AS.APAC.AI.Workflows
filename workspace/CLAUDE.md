@@ -14,6 +14,7 @@ is committed to `ai-workspace/memory/` at the end of the ticket.**
 | `ABF` | `apac-benefits-frontend` | **Benefit admin UI** (Blazor WASM, MudBlazor): customers, privileges, reports, vendor module, Data Processor Report | .NET Blazor |
 | `ABCB` | `apac-benefit-client-backend` | checkout on the **data-processor** branches: `DataProcesser/` (client customer-file imports, AWS Batch) | .NET 8 console → Docker → Batch |
 | `ABCB.Clone` | `apac-benefit-client-backend` | same repo on **`develop`**: `ClientService.API` (Lambda `api/clients/*` — privileges, reports, customers, handback), `WebHookSyncDataRsaBenefit` (`api/webhook-roadside/*`) | .NET Lambda |
+| `ABMR` | `apac_mobile_roadside` | **RSA provider mobile app** ("Aspire Partner", Android): providers/drivers log in, receive jobs, update status, upload photos, stream location; talks to ABMB `BkkRsaPartner` `api/pmws/*` | Kotlin, Jetpack Compose, Hilt, Retrofit, Room; Gradle flavours sit/uat/prerpod/prod |
 | `ai-workspace` | (this kit) | instructions, commands, memory, access recipes, Confluence generators | — |
 | `issues/` | — | one task file per ticket (`issues/ABE-xxxx.md`): brief → analysis → implementation → verification → release. Not committed to product repos | — |
 
@@ -29,9 +30,10 @@ The same repo (`apac-benefit-client-backend`) deploys **two different things fro
 | ABVB | `develop` | `staging` | `main` | push / tag |
 | ABF | `develop` | `staging` | `main` | push / tag |
 | ABMB RoadSide | `roadside_release_sit` (underscores) | `roadside-release-uat` | `roadside-release-production` | push (SIT/UAT); PROD = tag `prod/YYYYMMDD_NN` + manual approval |
+| ABMR mobile | `main` → flavour `sit` (`buildspec.yml`) | `main` → flavour `uat` (`buildspec-uat.yml`) | `main` → flavour `prod` (`buildspec-prod.yml`) | CodeBuild → signed APK → Firebase App Distribution; one branch, env = Gradle flavour |
 
 **Feature branches: `jira/ABE-xxxx-short-slug`, cut from the branch that feeds the first test environment
-(`develop` for ABCB API / ABVB / ABF) — never from `main`.** PR → that branch; QA tests on SIT; promote.
+(`develop` for ABCB API / ABVB / ABF; **ABMR is the exception: it works on `main`**) — never from `main` otherwise.** PR → that branch; QA tests on SIT; promote.
 
 ## Environments and data
 

@@ -74,6 +74,7 @@ function Link-Memory($folder, $kitName) {
 Link-Memory $WS 'AspireDigital'
 foreach ($p in @('ABCB','ABCB.Clone')) { if (Test-Path (Join-Path $WS $p)) { Link-Memory (Join-Path $WS $p) 'ABCB' } }
 if (Test-Path (Join-Path $WS 'ABMB')) { Link-Memory (Join-Path $WS 'ABMB') 'ABMB' }
+if (Test-Path (Join-Path $WS 'ABMR')) { Link-Memory (Join-Path $WS 'ABMR') 'ABMR' }
 
 # 5. MCP servers (user scope). PS 5.1 turns a native command's stderr into a terminating error under 'Stop',
 # so probe registration through cmd instead of 2>$null.

@@ -14,3 +14,4 @@
 - [ABE-5368 Porsche XLSX job report](abe-5368-porsche-xlsx-report.md) — 3 hard blockers (no Benefit API, no PTH field codes, tier mismatch), PTH ids per env, job→customer link path
 - [ABE-5457 provider mobile flag](abe-5457-provider-mobile-flag.md) — Ver2 sync never writes isProviderMobile; Auto-mode autocomplete hides 317 prod providers; access recipe
 - [ISOS Confluence write via twg](isos-confluence-write-via-twg.md) — Atlassian MCP is read-only/no folders on ISOS; twg CLI publishes; AD space 64782337, AI folder 6837207196, workflow-series page ids
+- [ABMR mobile roadside repo](abmr-mobile-roadside-repo.md) — Android provider app added to the kit 22 Sep 2026; works on main + Gradle flavours, pmws client of ABMB, CodeBuild location unknown, sec/ creds committed

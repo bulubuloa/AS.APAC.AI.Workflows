@@ -4,7 +4,7 @@
 set -euo pipefail
 
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WS="${WORKSPACE:-$(dirname "$KIT")}"          # the folder that holds the ABMB/ABVB/ABF/ABCB repos
+WS="${WORKSPACE:-$(dirname "$KIT")}"          # the folder that holds the ABMB/ABVB/ABF/ABCB/ABMR repos
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 STAMP="$(date +%Y%m%d%H%M%S)"
 
@@ -67,6 +67,7 @@ link_memory "$WS" AspireDigital
 [ -d "$WS/ABCB" ]       && link_memory "$WS/ABCB" ABCB
 [ -d "$WS/ABCB.Clone" ] && link_memory "$WS/ABCB.Clone" ABCB
 [ -d "$WS/ABMB" ]       && link_memory "$WS/ABMB" ABMB
+[ -d "$WS/ABMR" ]       && link_memory "$WS/ABMR" ABMR
 
 # 5. MCP servers (user scope; harmless if already present)
 if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "claude CLI not found — install Claude Code, then run claude/mcp.sh"; fi

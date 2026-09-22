@@ -14,6 +14,7 @@ ABVB        apac-benefit-vendor-backend         develop
 ABF         apac-benefits-frontend              develop
 ABCB        apac-benefit-client-backend         data-processer-pre-production
 ABCB.Clone  apac-benefit-client-backend         develop
+ABMR        apac_mobile_roadside                main
 "
 mkdir -p "$WS"; say "workspace: $WS"
 echo "$REPOS" | while read -r dir repo branch; do
