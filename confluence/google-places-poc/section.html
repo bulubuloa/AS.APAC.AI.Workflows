@@ -1,0 +1,21 @@
+<h2>Request flow — CMS vs Google</h2>
+<p>Every call the <strong>CMS vs Google</strong> tab makes, in order. <code>{app}</code> = the POC host (Lambda Function URL), which adds the Google key — the browser never sees it. <code>{env}</code> = Kontent environment: UAT <code>225b0999-fce9-02b4-c44b-ed6990faeeaa</code>, PROD <code>994226e6-d1a5-023e-0fc9-21571d884f47</code>. Nothing is written to Kontent.</p>
+<h3>Overview</h3>
+<p><ac:image ac:width="1000"><ri:attachment ri:filename="gp-flow-overview.png" /></ac:image></p>
+<h3>Sequence</h3>
+<p><ac:image ac:width="760"><ri:attachment ri:filename="gp-flow-sequence.png" /></ac:image></p>
+<h3>Steps, URLs and parameters</h3>
+<table><tbody>
+<tr><th>#</th><th>Step</th><th>Request</th><th>Parameters</th></tr>
+<tr><td>A1</td><td>Load vendors</td><td><code>GET https://deliver.kontent.ai/{env}/items</code></td><td><code>system.type=template_generic</code>, <code>limit=1000</code>, <code>skip=0,1000,…</code>, <code>depth=0</code>, <code>elements=vendor_name,vendor_status,category_text,sub_category_text,website,phone_code,phone_number,office_address,short_description,description,image,logo,location,vendor_country,module_dynamic_category</code></td></tr>
+<tr><td>A2</td><td>Load locations</td><td><code>GET https://deliver.kontent.ai/{env}/items</code></td><td><code>system.type=location</code>, <code>limit=1000</code>, <code>skip=0,…</code>, <code>depth=0</code></td></tr>
+<tr><td>A3</td><td>Build the left list (browser, no call)</td><td>—</td><td>keep vendors whose <code>sub_category_text</code> contains "restaurant" or <code>category_text</code> contains "food and wine"; one row per linked <code>location</code></td></tr>
+<tr><td>B1</td><td>Text Search</td><td><code>POST {app}/gplaces/v1/places:searchText</code> → <code>POST https://places.googleapis.com/v1/places:searchText</code></td><td>Header <code>X-Goog-FieldMask: places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.businessStatus</code><br />Body <code>textQuery</code> = vendor_name + address_line_1 (or city / province) + country name · <code>regionCode</code> = location.country (e.g. TH) · <code>languageCode=en</code> · <code>maxResultCount=5</code> · <code>locationBias</code> = 5 km circle around CMS lat/lng (only if valid)</td></tr>
+<tr><td>B2</td><td>Retry (only if no result, or best is a hotel / not food / closed / weak)</td><td>same as B1</td><td>same body + <code>includedType=restaurant</code>; results merged</td></tr>
+<tr><td>B3</td><td>Compare (browser, no call)</td><td>—</td><td>name, CMS address words in Google address, distance to CMS pin, food type → sort, label HIGH / MEDIUM / AMBIGUOUS / LOW / NONE</td></tr>
+<tr><td>B4</td><td>Place Details (best candidate)</td><td><code>GET {app}/gplaces/v1/places/{placeId}?languageCode=en</code> → <code>GET https://places.googleapis.com/v1/places/{placeId}</code></td><td>Header <code>X-Goog-FieldMask: id,displayName,formattedAddress,addressComponents,location,types,primaryType,businessStatus,googleMapsUri,nationalPhoneNumber,internationalPhoneNumber,websiteUri,regularOpeningHours,currentOpeningHours,rating,userRatingCount,priceLevel,editorialSummary,photos,…</code></td></tr>
+<tr><td>B5</td><td>Photos (×4)</td><td><code>GET {app}/gplaces/v1/places/{placeId}/photos/{ref}/media?maxWidthPx=320</code></td><td>Google answers 302 → <code>lh3.googleusercontent.com</code>; the browser loads the image</td></tr>
+<tr><td>B6</td><td>Show result (browser, no call)</td><td>—</td><td>candidates, Google card, field table (CMS vs Google, Google terms); result kept in memory only</td></tr>
+<tr><td>C</td><td>Pick another candidate (optional)</td><td>B4 + B5 for that <code>placeId</code></td><td>table redrawn, "manually corrected" — not saved</td></tr>
+</tbody></table>
+<p><strong>Per restaurant:</strong> 1 Text Search + 1 Place Details (+1 Text Search on retry) + up to 4 photo calls. Example (Savelberg, PROD): <code>textQuery</code> = "Savelberg, Oriental Residence Bangkok 110 Wireless Road. Lumpini. Pathumwan Bangkok 10330, Thailand", <code>regionCode</code> = "TH".</p>

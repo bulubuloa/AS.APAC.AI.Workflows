@@ -1,0 +1,27 @@
+{
+  "places": [
+    {
+      "id": "ChIJC8qDNCGf4jARR-fM5CgWoH4",
+      "types": [
+        "fine_dining_restaurant",
+        "french_restaurant",
+        "european_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "136, 1 Soi Yen Akat 2, Khwaeng Chong Nonsi, Khet Yan Nawa, Krung Thep Maha Nakhon 10120",
+      "location": {
+        "latitude": 13.7126573,
+        "longitude": 100.5484747
+      },
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Savelberg",
+        "languageCode": "en"
+      },
+      "primaryType": "fine_dining_restaurant"
+    }
+  ]
+}

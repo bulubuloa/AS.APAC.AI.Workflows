@@ -1,0 +1,99 @@
+<div data-type="panel-info"><p><strong>Outcome:</strong> Google Places can make PD onboarding much easier. <strong>Name + country</strong> finds the right restaurant first 92% of the time; adding a <strong>postal code</strong> makes it 100% (38 known restaurants). <strong>Decision (30 Sep 2026): live</strong> — CMS stores the Google Place ID plus our own content; the website reads address, hours, phone, website, rating and photos live from Google.</p></div>
+<h2>1. Demo</h2>
+<ul>
+<li>URL: <a href="https://yed3iooo7fgdusqvbyiruxwjwu0gowbs.lambda-url.ap-southeast-1.on.aws/">https://yed3iooo7fgdusqvbyiruxwjwu0gowbs.lambda-url.ap-southeast-1.on.aws/</a> — login from Hoang Quach (temporary; POC Lambda <code>apac-google-places-poc</code>, ap-southeast-1).</li>
+<li>Reads Kontent.ai <strong>UAT</strong> or <strong>PROD</strong> (switch in the header) via the public, read-only Delivery API. Nothing is written to CMS.</li>
+</ul>
+<table><thead><tr><th>Tab</th><th>What it shows</th></tr></thead><tbody>
+<tr><td>Overview</td><td>How complete our restaurant data is today, CMS fit and gaps, Google terms</td></tr>
+<tr><td>CMS vs Google</td><td>Pick a CMS restaurant → match on Google → candidates → field-by-field comparison; click another candidate to correct a wrong match</td></tr>
+<tr><td>PD onboarding</td><td>Minimum input (name + country, postal code recommended) → pick from up to 5 results → what PD saves vs what comes live, plus a website preview</td></tr>
+<tr><td>Batch accuracy</td><td>Match a sample automatically; confidence HIGH / MEDIUM / AMBIGUOUS / LOW; every count clickable to list the restaurants; CSV export</td></tr>
+</tbody></table>
+<h2>2. Minimum input for the PD team</h2>
+<table><thead><tr><th>PD enters</th><th>Right place is 1st</th><th>Right place in the list (top 5)</th></tr></thead><tbody>
+<tr><td>Name (+ country)</td><td>35/38 (92%)</td><td>37/38 (97%)</td></tr>
+<tr><td>Name + city</td><td>37/38 (97%)</td><td>37/38</td></tr>
+<tr><td>Name + district</td><td>37/38 (97%)</td><td>38/38 (100%)</td></tr>
+<tr><td><strong>Name + postal code</strong></td><td><strong>38/38 (100%)</strong></td><td>38/38</td></tr>
+<tr><td>Name + street</td><td>38/38 (100%)</td><td>38/38</td></tr>
+<tr><td>District + postal code, no name</td><td>1/38</td><td>1/38</td></tr>
+</tbody></table>
+<p>Form: <strong>Name</strong> (required) · <strong>Country</strong> (required) · <strong>Postal code</strong> (recommended) · City / District / Street (optional). When Google returns several results (e.g. "Hong Bao, Thailand" → 5 branches), PD picks one; each branch is one CMS location.</p>
+<h2>3. Decision: live — where each field lives</h2>
+<table><thead><tr><th>Group</th><th>Fields</th><th>Where</th></tr></thead><tbody>
+<tr><td>Saved: Place ID</td><td><code>google_place_id</code> (new element on <code>location</code>)</td><td>CMS</td></tr>
+<tr><td>PD saves, Google suggests</td><td>vendor name, country, category, location name/status, city, cuisine, price, dietary, ambience</td><td>CMS — our own values; the website filters and searches on them</td></tr>
+<tr><td>Live from Google</td><td>address, district, province, postal code, coordinates, opening hours, phone, website, rating, photos</td><td>Website at display time, with Google attribution — not saved</td></tr>
+<tr><td>PD / Marketing enters</td><td>offer, T&amp;C, cancellation, fulfilment, description, images, logo, email, accolades, dress code</td><td>CMS</td></tr>
+</tbody></table>
+<p>Reason: Google Maps Platform terms allow storing only the Place ID (lat/lng cache ≤ 30 days).</p>
+<h2>4. CMS structure fit</h2>
+<ul>
+<li><strong>Fits:</strong> vendor → <code>location</code> linked items (multi-branch works); address, coordinates, 7 per-day hours, country (ISO code), price rating ($–$$$$) map 1:1.</li>
+<li><strong>Gaps:</strong> no <code>google_place_id</code>; phone/website only at vendor level (not per branch); cuisine/ambience need a Google-type → CMS-item mapping; Google sometimes returns Thai-script address parts.</li>
+<li><strong>CMS list bugs found:</strong> cuisine items <code>american__copy_</code> = "Korean", <code>chinese__copy_</code> = "Mexican", <code>indian__copy_</code> = "French".</li>
+</ul>
+<h2>5. What the POC found in our data</h2>
+<table><thead><tr><th>PROD restaurants (29 Sep 2026)</th><th>Value</th></tr></thead><tbody>
+<tr><td>Restaurant vendors / locations</td><td>399 / 411 (TH 272, VN 129, AU 8, SG 2)</td></tr>
+<tr><td>Locations with GPS / opening hours / street address</td><td>4% / 3% / 67%</td></tr>
+<tr><td>Vendors with website</td><td>2%</td></tr>
+<tr><td>Matching (Thailand, 40 random)</td><td>30/40 HIGH + MEDIUM; every HIGH checked was correct</td></tr>
+<tr><td>Stale data surfaced</td><td>closed restaurants (J'Aime, Dexter, Nén Light, Soul Food Mahanakorn), moved (Savelberg, Benjarong), replaced (Le Vendome, Long Table)</td></tr>
+<tr><td>Test / bad data in PROD</td><td>all 8 AU locations are test records; junk coordinates on 3 locations; Anan Saigon (HCMC) tagged TH</td></tr>
+</tbody></table>
+<p>UAT restaurant data is mostly test records — use PROD for accuracy numbers.</p>
+<h2>6. Request flow — CMS vs Google tab</h2>
+<p><code>{app}</code> = POC host (Lambda Function URL), which adds the Google key — the browser never sees it. <code>{env}</code> = Kontent environment: UAT <code>225b0999-fce9-02b4-c44b-ed6990faeeaa</code>, PROD <code>994226e6-d1a5-023e-0fc9-21571d884f47</code>.</p>
+<h3>Overview</h3>
+<pre data-breakout="wide"><code class="language-text">                      A. GET /{env}/items (template_generic, location)      read-only, no key
+  +---------------+ -------------------------------------------------&gt; [ Kontent.ai Delivery API ]
+  | User browser  |                                                      deliver.kontent.ai
+  | (React POC)   |   B. /gplaces/v1/... (searchText, places/{id}, media)
+  +---------------+ -----------------&gt; [ POC host: AWS Lambda ] ---- + X-Goog-Api-Key ----&gt; [ Google Places API (New) ]
+          ^                              ABE VPC, NAT 52.74.89.90                              places.googleapis.com
+          |                                                                                          |
+          +------------------------------ image &lt;---- [ lh3.googleusercontent.com ] &lt;--- 302 --------+</code></pre>
+<h3>Sequence</h3>
+<pre data-breakout="wide"><code class="language-text">Browser                      Kontent                    POC host (Lambda)                 Google Places
+   |  A1 GET vendors (x per 1000) -&gt;|                            |                                  |
+   |  A2 GET locations ------------&gt;|                            |                                  |
+   |  A3 keep restaurants, one row per location                  |                                  |
+   |                                                              |                                  |
+   |  B1 POST /gplaces/v1/places:searchText ---------------------&gt;|--- POST /v1/places:searchText --&gt;|
+   |&lt;------------------------------------------ up to 5 candidates ---------------------------------|
+   |  B3 compare with CMS -&gt; HIGH / MEDIUM / AMBIGUOUS / LOW                                         |
+   |  B2 (only if nothing / hotel / not food / closed / weak) same + includedType=restaurant -------&gt;|
+   |  B4 GET /gplaces/v1/places/{placeId} -----------------------&gt;|--- GET /v1/places/{placeId} ----&gt;|
+   |&lt;------------------------------------------------- place details -------------------------------|
+   |  B5 GET /gplaces/v1/{photo}/media (x4) ---------------------&gt;|--- GET /v1/{photo}/media -------&gt;|
+   |&lt;------------------------------ 302 -&gt; lh3.googleusercontent.com (browser loads image) ---------|
+   |  B6 draw candidates, Google card, field table (nothing saved)                                   |
+   |  C  optional: click another candidate -&gt; B4 + B5 for that placeId                               |</code></pre>
+<h3>Steps, URLs and parameters</h3>
+<table><thead><tr><th>#</th><th>Step</th><th>Request</th><th>Parameters</th></tr></thead><tbody>
+<tr><td>A1</td><td>Load vendors</td><td><code>GET https://deliver.kontent.ai/{env}/items</code></td><td><code>system.type=template_generic</code>, <code>limit=1000</code>, <code>skip=0,1000,…</code>, <code>depth=0</code>, <code>elements=vendor_name,vendor_status,category_text,sub_category_text,website,phone_code,phone_number,office_address,short_description,description,image,logo,location,vendor_country,module_dynamic_category</code></td></tr>
+<tr><td>A2</td><td>Load locations</td><td><code>GET https://deliver.kontent.ai/{env}/items</code></td><td><code>system.type=location</code>, <code>limit=1000</code>, <code>skip=0,…</code>, <code>depth=0</code></td></tr>
+<tr><td>A3</td><td>Build the list (browser)</td><td>—</td><td>keep vendors whose <code>sub_category_text</code> contains "restaurant" or <code>category_text</code> contains "food and wine"; one row per linked <code>location</code></td></tr>
+<tr><td>B1</td><td>Text Search</td><td><code>POST {app}/gplaces/v1/places:searchText</code> → <code>POST https://places.googleapis.com/v1/places:searchText</code></td><td>Header <code>X-Goog-FieldMask: places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.businessStatus</code>. Body: <code>textQuery</code> = vendor_name + address_line_1 (or city / province) + country name; <code>regionCode</code> = location.country (e.g. TH); <code>languageCode=en</code>; <code>maxResultCount=5</code>; <code>locationBias</code> = 5 km circle around CMS lat/lng (only if valid)</td></tr>
+<tr><td>B2</td><td>Retry (sometimes)</td><td>same as B1</td><td>+ <code>includedType=restaurant</code>; only if no result or the best is a hotel / not food / closed / weak; results merged</td></tr>
+<tr><td>B3</td><td>Compare (browser)</td><td>—</td><td>name, CMS address words in Google address, distance to CMS pin, food type → sort, label HIGH / MEDIUM / AMBIGUOUS / LOW / NONE</td></tr>
+<tr><td>B4</td><td>Place Details</td><td><code>GET {app}/gplaces/v1/places/{placeId}?languageCode=en</code> → <code>GET https://places.googleapis.com/v1/places/{placeId}</code></td><td>Header <code>X-Goog-FieldMask: id,displayName,formattedAddress,addressComponents,location,types,primaryType,businessStatus,googleMapsUri,nationalPhoneNumber,internationalPhoneNumber,websiteUri,regularOpeningHours,currentOpeningHours,rating,userRatingCount,priceLevel,editorialSummary,photos,…</code></td></tr>
+<tr><td>B5</td><td>Photos (×4)</td><td><code>GET {app}/gplaces/v1/places/{placeId}/photos/{ref}/media?maxWidthPx=320</code></td><td>Google answers 302 → <code>lh3.googleusercontent.com</code>; the browser loads the image</td></tr>
+<tr><td>B6</td><td>Show result (browser)</td><td>—</td><td>candidates, Google card, field table; kept in memory only</td></tr>
+<tr><td>C</td><td>Pick another candidate</td><td>B4 + B5 for that <code>placeId</code></td><td>table redrawn, "manually corrected" — not saved</td></tr>
+</tbody></table>
+<p><strong>Per restaurant:</strong> 1 Text Search + 1 Place Details (+1 Text Search on retry) + up to 4 photos. Example (Savelberg, PROD): <code>textQuery</code> = "Savelberg, Oriental Residence Bangkok 110 Wireless Road. Lumpini. Pathumwan Bangkok 10330, Thailand", <code>regionCode</code> = "TH". Only name, address/city, country and optionally coordinates are sent to Google — no customer data.</p>
+<h2>7. Cost (to confirm on the Google pricing page)</h2>
+<p>Live = about one Place Details call per restaurant page view (+ photos). Phone, website, hours and rating are top-tier (Enterprise) fields. Keep the field mask to what the page shows, lazy-load photos, set a daily quota, and estimate monthly restaurant page views before launch.</p>
+<h2>8. Next steps</h2>
+<ul data-type="task-list">
+<li data-type="task-item"><input type="checkbox"> Add <code>google_place_id</code> (text) to the Kontent <code>location</code> type</li>
+<li data-type="task-item"><input type="checkbox"> PD screen: search → pick → confirm (CMS custom element or admin page)</li>
+<li data-type="task-item"><input type="checkbox"> Server-side endpoint <code>GET /places/{placeId}</code> for the website (key server-side, tight field mask)</li>
+<li data-type="task-item"><input type="checkbox"> Google attribution on the page; fallback when Google fails or the place is closed</li>
+<li data-type="task-item"><input type="checkbox"> Production Google key, billing owner and daily quota</li>
+<li data-type="task-item"><input type="checkbox"> Clean-up of stale/test CMS data found by the POC; fix the mislabelled cuisine items</li>
+</ul>
+<p><em>Source: repo folder <code>GooglePlaceAPI.POC</code> (docs: <code>FINDINGS.md</code>, <code>PD-ONBOARDING.md</code>, <code>CMS-VS-GOOGLE-FLOW.md</code>, <code>batch-2026-09-29.md</code>; experiment <code>experiments/min-input.mjs</code>).</em></p>

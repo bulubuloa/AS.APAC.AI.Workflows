@@ -1,0 +1,25 @@
+{
+  "places": [
+    {
+      "id": "ChIJT-EGk9-e4jARJ6mn91P_XMk",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "formattedAddress": "110 Thanon Witthayu, Khwaeng Lumphini, Pathum Wan, Krung Thep Maha Nakhon 10330",
+      "location": {
+        "latitude": 13.7383449,
+        "longitude": 100.54640549999999
+      },
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Oriental Residence Bangkok",
+        "languageCode": "en"
+      },
+      "primaryType": "hotel"
+    }
+  ]
+}

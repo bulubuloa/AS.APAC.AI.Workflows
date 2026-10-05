@@ -74,9 +74,28 @@ if command -v claude >/dev/null; then bash "$KIT/claude/mcp.sh"; else warn "clau
 
 # 5b. Codex CLI (OpenAI) — same content, its file names: AGENTS.md, ~/.codex/prompts, config.toml
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ]; then
+# the Codex desktop app may be installed before ~/.codex exists - detect the app too, not only the folder
+CODEX_WIN_BIN="${LOCALAPPDATA:+$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/OpenAI/Codex/bin}"
+if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ] || command -v codex >/dev/null || [ -d "/Applications/ChatGPT.app" ] || { [ -n "$CODEX_WIN_BIN" ] && [ -d "$CODEX_WIN_BIN" ]; }; then
   # the ChatGPT desktop app bundles the codex CLI but does not put it on PATH; a short name keeps commands on one line
   if ! command -v codex >/dev/null && [ -x "/Applications/ChatGPT.app/Contents/Resources/codex" ]; then mkdir -p "$HOME/.local/bin"; ln -sf /Applications/ChatGPT.app/Contents/Resources/codex "$HOME/.local/bin/codex"; say "codex: linked ~/.local/bin/codex"; fi
+  # Windows app: codex.exe sits in %LOCALAPPDATA%\OpenAI\Codex\bin\<hash>\ and the hash changes per update - resolve the newest at run time
+  if ! command -v codex >/dev/null && [ -n "$CODEX_WIN_BIN" ] && ls "$CODEX_WIN_BIN"/*/codex.exe >/dev/null 2>&1; then
+    mkdir -p "$HOME/.local/bin"
+    printf '#!/usr/bin/env bash\nexec "$(ls -t "%s"/*/codex.exe | head -1)" "$@"\n' "$CODEX_WIN_BIN" > "$HOME/.local/bin/codex"; chmod +x "$HOME/.local/bin/codex"
+    sed 's/$/\r/' > "$HOME/.local/bin/codex.cmd" <<'CMD'
+@echo off
+for /f "delims=" %%d in ('dir /b /ad /o-d "%LOCALAPPDATA%\OpenAI\Codex\bin" 2^>nul') do (
+  if exist "%LOCALAPPDATA%\OpenAI\Codex\bin\%%d\codex.exe" (
+    "%LOCALAPPDATA%\OpenAI\Codex\bin\%%d\codex.exe" %*
+    exit /b
+  )
+)
+echo codex.exe not found under %LOCALAPPDATA%\OpenAI\Codex\bin 1>&2
+exit /b 1
+CMD
+    say "codex: launcher ~/.local/bin/codex (+ codex.cmd) -> newest Codex app codex.exe"
+  fi
   mkdir -p "$CODEX_HOME/prompts"
   backup "$CODEX_HOME/AGENTS.md"; sed 's/Co-Authored-By: Claude/Co-Authored-By: Codex/' "$KIT/claude/CLAUDE.md" > "$CODEX_HOME/AGENTS.md"
   for c in "$KIT"/codex/prompts/*.md; do cp "$c" "$CODEX_HOME/prompts/"; done
@@ -95,7 +114,7 @@ if [ -d "$CODEX_HOME" ] || [ "${WITH_CODEX:-0}" = "1" ]; then
   grep -q '\[mcp_servers.atlassian-isos\]' "$cfg" || printf '\n[mcp_servers.atlassian-isos]\nurl = "https://mcp.atlassian.com/v1/mcp"\n' >> "$cfg"
   grep -q '\[mcp_servers.playwright\]' "$cfg" || printf '\n[mcp_servers.playwright]\ntype = "stdio"\ncommand = "npx"\nargs = ["-y", "@playwright/mcp@latest"]\n' >> "$cfg"
   grep -q "\[projects.\"$WS\"\]" "$cfg" || printf '\n[projects."%s"]\ntrust_level = "trusted"\n' "$WS" >> "$cfg"
-  say "codex: AGENTS.md (global, workspace, repos), 2 prompts, MCP servers in config.toml — run: codex mcp login atlassian-isos"
+  say "codex: AGENTS.md (global, workspace, repos), prompts, MCP servers in config.toml — run: codex mcp login atlassian-isos"
 fi
 
 # 6. Secret guard for this repo

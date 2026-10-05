@@ -1,0 +1,292 @@
+[
+ {
+  "key": "full",
+  "label": "All fields: name + address_line_1 + country",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, 20/15-17 Sukhumvit Soi 39, Bangkok 10110, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJq80duOSe4jARnUemw9rNqYQ",
+     "name": "Philippe",
+     "address": "20, 15-17 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": "french_restaurant"
+    }
+   ]
+  }
+ },
+ {
+  "key": "no_address",
+  "label": "address_line_1 missing → name + city + country",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, Bangkok, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJq80duOSe4jARnUemw9rNqYQ",
+     "name": "Philippe",
+     "address": "20, 15-17 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": "french_restaurant"
+    },
+    {
+     "id": "ChIJrSEtZ-Cf4jAR1BxofIJGDHg",
+     "name": "Maison Philippe",
+     "address": "S101, 1, st Floor, 161 ซ. สุขุมวิท 39 Khlongton-Nue, เขตวัฒนา กรุงเทพมหานคร 10110",
+     "type": "bistro"
+    }
+   ]
+  }
+ },
+ {
+  "key": "name_country",
+  "label": "address and city missing → name + country",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJq80duOSe4jARnUemw9rNqYQ",
+     "name": "Philippe",
+     "address": "20, 15-17 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": "french_restaurant"
+    },
+    {
+     "id": "ChIJrSEtZ-Cf4jAR1BxofIJGDHg",
+     "name": "Maison Philippe",
+     "address": "S101, 1, st Floor, 161 ซ. สุขุมวิท 39 Khlongton-Nue, เขตวัฒนา กรุงเทพมหานคร 10110",
+     "type": "bistro"
+    },
+    {
+     "id": "ChIJPaviqdqe4jARfbxNCQAuhIo",
+     "name": "Patek Philippe Bangkok Customer Service Center",
+     "address": "127 Gaysorn Tower, 9th Floor, Unit No.A, ถ. ราชดำริ แขวงลุมพินี เขตปทุมวัน กรุงเทพมหานคร 10330",
+     "type": "service"
+    }
+   ]
+  }
+ },
+ {
+  "key": "postal",
+  "label": "address missing, postal code present → name + postal code + country",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, 10110, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJq80duOSe4jARnUemw9rNqYQ",
+     "name": "Philippe",
+     "address": "20, 15-17 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": "french_restaurant"
+    }
+   ]
+  }
+ },
+ {
+  "key": "no_name",
+  "label": "vendor_name missing → address + country",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "20/15-17 Sukhumvit Soi 39, Bangkok 10110, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJc-Ew1wGf4jAR_w_CBPOX13U",
+     "name": "20/15 Soi Sukhumvit 39",
+     "address": "20/15 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": ""
+    }
+   ]
+  }
+ },
+ {
+  "key": "no_country",
+  "label": "country missing → name + address, no regionCode",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, 20/15-17 Sukhumvit Soi 39, Bangkok 10110"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJq80duOSe4jARnUemw9rNqYQ",
+     "name": "Philippe",
+     "address": "20, 15-17 Soi Sukhumvit 39, Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110, Thailand",
+     "type": "french_restaurant"
+    }
+   ]
+  }
+ },
+ {
+  "key": "no_country_name_only",
+  "label": "country and address missing → name only",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJg1K3zGEZ2jERVI3rG8r73FI",
+     "name": "Patek Philippe Boutique - Singapore - Takashimaya",
+     "address": "391A Orchard Rd, Level 2 Takashimaya Department Store, Singapore 238872",
+     "type": "store"
+    },
+    {
+     "id": "ChIJd9NcMVvGwoARpVcjtJfZBQo",
+     "name": "Philippe The Original",
+     "address": "1001 N Alameda St, Los Angeles, CA 90012, USA",
+     "type": "sandwich_shop"
+    },
+    {
+     "id": "ChIJ__EU0QUZ2jEREff_2_Hn2dg",
+     "name": "Patek Philippe Boutique Marina Bay Sands by Cortina Watch",
+     "address": "B2M-239/240 The Shoppes at Marina Bay Sands, Singapore 018972",
+     "type": "store"
+    },
+    {
+     "id": "ChIJyRIV6Y0Z2jERMOjPrMYH58g",
+     "name": "Patek Philippe Boutique ION Orchard by Cortina Watch",
+     "address": "2 Orchard Turn, #02-01 / 02 / 03, Singapore 238801",
+     "type": "store"
+    },
+    {
+     "id": "ChIJkZuMtY0Z2jERWF1JIcTZLYE",
+     "name": "Patek Philippe Southeast Asia Pte. Ltd.",
+     "address": "501 Orchard Rd, #16-01/02 Wheelock Place, Singapore 238880",
+     "type": "service"
+    }
+   ]
+  }
+ },
+ {
+  "key": "bad_coords",
+  "label": "junk CMS coordinates sent as locationBias (1232142141, 412412412)",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Philippe, 20/15-17 Sukhumvit Soi 39, Bangkok 10110, Thailand",
+   "regionCode": "TH",
+   "locationBias": {
+    "circle": {
+     "center": {
+      "latitude": 1232142141,
+      "longitude": 412412412
+     },
+     "radius": 5000
+    }
+   }
+  },
+  "result": {
+   "error": "Invalid circle.center.latitude or circle.cetner.longitude. Latitude should be in the range of [-90, 90] inclusively. Longitude should be in the range of [-180, "
+  }
+ },
+ {
+  "key": "chain_name_country",
+  "label": "chain, name + country (Hong Bao)",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Hong Bao, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJg2fJodye4jAReabWihkrXLE",
+     "name": "Hong Bao Central embassy",
+     "address": "Central Embassy, ชั้น 5, 1031 ถนน เพลินจิต แขวงปทุมวัน เขตปทุมวัน กรุงเทพมหานคร 10330",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJx0WBNI2Z4jARLwUkVj82jvc",
+     "name": "Hong Bao ICONSIAM",
+     "address": "5th floor, ICONSIAM Shopping Center, 5 Charoen Nakhon Rd, Khwaeng Khlong Ton Sai, Khet Khlong San, Krung Thep Maha Nakhon 10600",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJB_p3KclhHTERmAmyOph42nM",
+     "name": "Hong Bao (Nirvana PORCH)",
+     "address": "เลขที่ 15/4 ห้องเลขที่ B102 ชั้น G ถนนศรีนครินทร์-ร่มเกล้า ทับช้าง Khet Saphan Sung, Krung Thep Maha Nakhon 10250",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJLVl8bYOf4jARKywLkGzPASk",
+     "name": "Hong Bao Emporium",
+     "address": "3rd Floor, Emporium, 622 ถ. สุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพมหานคร 10110",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJZcIJC3hiHTERZQGmNIRKa10",
+     "name": "Hong Bao The Crystal Park",
+     "address": "205 Pradit Manutham Rd, Khwaeng Lat Phrao, Khet Lat Phrao, Krung Thep Maha Nakhon 10230",
+     "type": "cantonese_restaurant"
+    }
+   ]
+  }
+ },
+ {
+  "key": "chain_postal",
+  "label": "chain, name + postal code + country (Hong Bao, 10330)",
+  "request": {
+   "languageCode": "en",
+   "maxResultCount": 5,
+   "textQuery": "Hong Bao, 10330, Thailand",
+   "regionCode": "TH"
+  },
+  "result": {
+   "places": [
+    {
+     "id": "ChIJg2fJodye4jAReabWihkrXLE",
+     "name": "Hong Bao Central embassy",
+     "address": "Central Embassy, ชั้น 5, 1031 ถนน เพลินจิต แขวงปทุมวัน เขตปทุมวัน กรุงเทพมหานคร 10330",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJx0WBNI2Z4jARLwUkVj82jvc",
+     "name": "Hong Bao ICONSIAM",
+     "address": "5th floor, ICONSIAM Shopping Center, 5 Charoen Nakhon Rd, Khwaeng Khlong Ton Sai, Khet Khlong San, Krung Thep Maha Nakhon 10600",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJLVl8bYOf4jARKywLkGzPASk",
+     "name": "Hong Bao Emporium",
+     "address": "3rd Floor, Emporium, 622 ถ. สุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพมหานคร 10110",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJW16clv6e4jARmB1QyvQw_HU",
+     "name": "Hong Bao Sukhumvit 39",
+     "address": "104 ถนน สุขุมวิท Khwaeng Khlong Tan Nuea, Watthana, Krung Thep Maha Nakhon 10110",
+     "type": "chinese_restaurant"
+    },
+    {
+     "id": "ChIJT8SSv9Oj4jAR8h9v-lMq9Ds",
+     "name": "Hong Bao King Square",
+     "address": "ชั้น 2 ห้องเลขที่ 201 โครงการ คิงสแควร์ คอมมูนิตี้มอลล์ 775 Ratchadaphisek Rd, Khwaeng Bang Phong Phang, Khet Yan Nawa, Krung Thep Maha Nakhon 10120",
+     "type": "chinese_restaurant"
+    }
+   ]
+  }
+ }
+]

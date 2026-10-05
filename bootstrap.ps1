@@ -85,7 +85,27 @@ if (Get-Command claude -ErrorAction SilentlyContinue) {
 } else { Warn 'claude CLI not found - install Claude Code, then run: claude mcp add --transport http -s user atlassian-isos https://mcp.atlassian.com/v1/mcp' }
 
 # 5b. Codex CLI
-if ((Test-Path $CodexHome) -or $WithCodex) {
+# the Codex desktop app may be installed before ~\.codex exists - detect the app too, not only the folder
+$CodexAppBin = Join-Path $env:LOCALAPPDATA 'OpenAI\Codex\bin'
+if ((Test-Path $CodexHome) -or $WithCodex -or (Get-Command codex -ErrorAction SilentlyContinue) -or (Test-Path $CodexAppBin)) {
+  # the app keeps codex.exe in bin\<hash>\ (hash changes per update) and not on PATH: a launcher in ~\.local\bin picks the newest
+  if (-not (Get-Command codex -ErrorAction SilentlyContinue) -and (Get-ChildItem $CodexAppBin -Filter codex.exe -Recurse -Depth 1 -ErrorAction SilentlyContinue)) {
+    $lb = Join-Path $env:USERPROFILE '.local\bin'; New-Item -ItemType Directory -Force $lb | Out-Null
+    @'
+@echo off
+for /f "delims=" %%d in ('dir /b /ad /o-d "%LOCALAPPDATA%\OpenAI\Codex\bin" 2^>nul') do (
+  if exist "%LOCALAPPDATA%\OpenAI\Codex\bin\%%d\codex.exe" (
+    "%LOCALAPPDATA%\OpenAI\Codex\bin\%%d\codex.exe" %*
+    exit /b
+  )
+)
+echo codex.exe not found under %LOCALAPPDATA%\OpenAI\Codex\bin 1>&2
+exit /b 1
+'@ | Set-Content -Encoding ascii (Join-Path $lb 'codex.cmd')
+    $up = [Environment]::GetEnvironmentVariable('Path', 'User')
+    if (($up -split ';') -notcontains $lb) { [Environment]::SetEnvironmentVariable('Path', ($up.TrimEnd(';') + ';' + $lb), 'User'); $env:Path += ';' + $lb }
+    Say 'codex: launcher ~\.local\bin\codex.cmd -> newest Codex app codex.exe'
+  }
   New-Item -ItemType Directory -Force (Join-Path $CodexHome 'prompts') | Out-Null
   (Get-Content (Join-Path $Kit 'claude\CLAUDE.md') -Raw) -replace 'Co-Authored-By: Claude', 'Co-Authored-By: Codex' | Set-Content (Join-Path $CodexHome 'AGENTS.md')
   Get-ChildItem (Join-Path $Kit 'codex\prompts\*.md') | Copy-Item -Destination (Join-Path $CodexHome 'prompts')

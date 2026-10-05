@@ -21,7 +21,10 @@ for p in "$WS" "$WS/ABCB" "$WS/ABMB" "$WS/ABMR"; do s="$HOME/.claude/projects/$(
 have claude && { claude mcp list 2>/dev/null | grep -q "atlassian-isos" && ok "MCP atlassian-isos registered (authenticate with /mcp inside claude)" || bad "MCP atlassian-isos (run claude/mcp.sh)"; claude mcp list 2>/dev/null | grep -q playwright && ok "MCP playwright" || bad "MCP playwright"; }
 
 echo "codex (optional)"
-if [ -d "$HOME/.codex" ]; then
+CODEX_WIN_BIN="${LOCALAPPDATA:+$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/OpenAI/Codex/bin}"
+if [ -d "$HOME/.codex" ] || command -v codex >/dev/null || { [ -n "$CODEX_WIN_BIN" ] && [ -d "$CODEX_WIN_BIN" ]; }; then
+  command -v codex >/dev/null && ok "codex on PATH" || bad "codex not on PATH (Codex app installed?) - re-run bootstrap.sh to add the ~/.local/bin launcher"
+  if command -v codex >/dev/null; then codex mcp list 2>/dev/null | grep -q atlassian-isos && ok "codex sees MCP atlassian-isos (login: codex mcp login atlassian-isos)" || bad "codex mcp list has no atlassian-isos - re-run bootstrap.sh"; fi
   [ -f "$HOME/.codex/AGENTS.md" ] && ok "~/.codex/AGENTS.md" || bad "~/.codex/AGENTS.md"
   [ -f "$WS/AGENTS.md" ] && ok "workspace AGENTS.md" || bad "workspace AGENTS.md"
   [ -f "$HOME/.codex/prompts/task-fetch.md" ] && ok "/prompts:task-fetch" || bad "codex prompt task-fetch"

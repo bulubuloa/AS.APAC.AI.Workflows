@@ -27,7 +27,12 @@ if (Have 'claude') { $l = claude mcp list 2>$null; if ($l -match 'atlassian-isos
 
 Write-Host 'codex (optional)'
 $CodexHome = Join-Path $env:USERPROFILE '.codex'
-if (Test-Path $CodexHome) {
+$CodexAppBin = Join-Path $env:LOCALAPPDATA 'OpenAI\Codex\bin'
+if ((Test-Path $CodexHome) -or (Get-Command codex -ErrorAction SilentlyContinue) -or (Test-Path $CodexAppBin)) {
+  if (Get-Command codex -ErrorAction SilentlyContinue) {
+    OK 'codex on PATH'
+    if ((cmd /c "codex mcp list 2>nul") -match 'atlassian-isos') { OK 'codex sees MCP atlassian-isos (login: codex mcp login atlassian-isos)' } else { Bad 'codex mcp list has no atlassian-isos - re-run bootstrap.ps1' }
+  } else { Bad 'codex not on PATH (Codex app installed?) - re-run bootstrap.ps1 to add the ~\.local\bin launcher' }
   if (Test-Path (Join-Path $CodexHome 'AGENTS.md')) { OK '~\.codex\AGENTS.md' } else { Bad '~\.codex\AGENTS.md' }
   if (Test-Path (Join-Path $WS 'AGENTS.md')) { OK 'workspace AGENTS.md' } else { Bad 'workspace AGENTS.md' }
   if (Test-Path (Join-Path $CodexHome 'prompts\task-fetch.md')) { OK '/prompts:task-fetch' } else { Bad 'codex prompt task-fetch' }

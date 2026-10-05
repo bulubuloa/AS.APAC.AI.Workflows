@@ -1,0 +1,12 @@
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#fff} .d{display:inline-block;padding:16px;background:#fff}</style></head><body>
+<script src="diagrams.mmd.js"></script>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: false, theme: "default", flowchart: { useMaxWidth: false }, sequence: { useMaxWidth: false, wrap: true, width: 190 } });
+for (const [k, v] of Object.entries(window.DIAGRAMS)) {
+  const { svg } = await mermaid.render("m" + k, v);
+  const div = document.createElement("div"); div.className = "d"; div.id = "d-" + k; div.innerHTML = svg; document.body.appendChild(div);
+  const el = div.querySelector("svg"); el.style.maxWidth = "none";
+}
+document.title = "done";
+</script></body></html>

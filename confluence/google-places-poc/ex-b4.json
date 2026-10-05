@@ -1,0 +1,248 @@
+{
+  "id": "ChIJC8qDNCGf4jARR-fM5CgWoH4",
+  "internationalPhoneNumber": "+66 2 252 8001",
+  "formattedAddress": "136, 1 Soi Yen Akat 2, Khwaeng Chong Nonsi, Khet Yan Nawa, Krung Thep Maha Nakhon 10120, Thailand",
+  "addressComponents": [
+    {
+      "longText": "136",
+      "shortText": "136",
+      "types": [
+        "subpremise"
+      ],
+      "languageCode": "en"
+    },
+    {
+      "longText": "1",
+      "shortText": "1",
+      "types": [
+        "street_number"
+      ],
+      "languageCode": "en"
+    },
+    {
+      "longText": "Soi Yen Akat 2",
+      "shortText": "Soi Yen Akat 2",
+      "types": [
+        "route"
+      ],
+      "languageCode": "th-Latn"
+    },
+    {
+      "longText": "Khwaeng Chong Nonsi",
+      "shortText": "Khwaeng Chong Nonsi",
+      "types": [
+        "sublocality_level_2",
+        "sublocality",
+        "political"
+      ],
+      "languageCode": "th-Latn"
+    },
+    {
+      "longText": "Khet Yan Nawa",
+      "shortText": "Khet Yan Nawa",
+      "types": [
+        "sublocality_level_1",
+        "sublocality",
+        "political"
+      ],
+      "languageCode": "th-Latn"
+    },
+    {
+      "longText": "Krung Thep Maha Nakhon",
+      "shortText": "Krung Thep Maha Nakhon",
+      "types": [
+        "administrative_area_level_1",
+        "political"
+      ],
+      "languageCode": "th-Latn"
+    },
+    {
+      "longText": "Thailand",
+      "shortText": "TH",
+      "types": [
+        "country",
+        "political"
+      ],
+      "languageCode": "en"
+    },
+    {
+      "longText": "10120",
+      "shortText": "10120",
+      "types": [
+        "postal_code"
+      ],
+      "languageCode": "en"
+    }
+  ],
+  "location": {
+    "latitude": 13.7126573,
+    "longitude": 100.5484747
+  },
+  "rating": 4.6,
+  "googleMapsUri": "https://maps.google.com/?cid=9124317209945761607&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA",
+  "websiteUri": "http://www.savelbergth.com/",
+  "regularOpeningHours": {
+    "weekdayDescriptions": [
+      "Monday: 6:00 – 10:00 PM",
+      "Tuesday: 6:00 – 10:00 PM",
+      "Wednesday: 6:00 – 10:00 PM",
+      "Thursday: Closed",
+      "Friday: 6:00 – 10:00 PM",
+      "Saturday: 12:00 – 2:00 PM, 6:00 – 10:00 PM",
+      "Sunday: 12:00 – 2:00 PM, 6:00 – 10:00 PM"
+    ]
+  },
+  "businessStatus": "OPERATIONAL",
+  "priceLevel": "PRICE_LEVEL_VERY_EXPENSIVE",
+  "userRatingCount": 332,
+  "displayName": {
+    "text": "Savelberg",
+    "languageCode": "en"
+  },
+  "currentOpeningHours": {
+    "openNow": false
+  },
+  "primaryType": "fine_dining_restaurant",
+  "photos": [
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMb4GufBSjzDpJHvXj9IEZga828MynwuOKxz7HfsEeA5u1tXMke_6JyPZnQTCWoAph7gmV47WPa8LlDjjhO2MRBgUkK6Vf31tA2JMrL42C5itpLiYgKMpzF26zWlpHcZeB8DxswQfUdup-a0FEiFBKsBA6yLT4qTVF6Ipdj9fu9RVEiAGnxBt2ti5bCupJzyFqv0LZFKLxNbuSlRh8nH4jz5M1tiYsfDOBpcUXFKNY1TGi9WEX542l_0sVY5yyKwmLR0PfrCIckDPbbXPs382i0Tg0YPPefP6kJsty0HRIp_gv44B9YWpPMfgGxmzuYdNiYKB7gUH9OwUzCilSCUYP5vaZemv9S7Yp1hR2kw8KGOuWFwB0IEu-QH-hzBvWosW6kSDVk_dht9FPpbD6JRFN2JqEz0qeE",
+      "widthPx": 2048,
+      "heightPx": 1364,
+      "authorAttributions": [
+        {
+          "displayName": "Savelberg",
+          "uri": "https://maps.google.com/maps/contrib/114347459381434421892",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWO68FLjIgLDb9HIyUroO_-1B5urp_4QzG-qbT_mzUSe6y6ZY1J=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIHM0ogKEICAgIDrt6f9nQE&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIHM0ogKEICAgIDrt6f9nQE!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMaB4cPLRo4C4kS0LBCDxzzqJ8tjfalKhETPRx8YbNMHMGYk9xEx_e1IjyBj4NVlLDQfRAqbg-oV9qeVVNI502jl-1M9G_Vh-DKlDVIurA3QrMJe7AXFDZaCA50GSBiu_oMCRsPRgxJmffiJicJHqeOlXL0jcxp66jvDOaGta3_TUylkN7wbGn6CB5nb5ML9pJzesMEjjZxUOtzClx1PjE1zA_qH-mRY5b-m1pVmHlX8tYF12XCr6nzin-bs6WnsOlw7ZFbwRoF63BzvErYSOmVX1n6sFfYL3PgJBAs9KPTN28lzTopiFZSNVRRpxyAjeA8X8Lhi_bZdmuGMskC3Rk9DtF3LbIMe9ZGzotoJnNTr02rW2u5dPPU73bci2F4XbuYDzy0elepPJnZB8t3ZCWS_PMM",
+      "widthPx": 4800,
+      "heightPx": 3200,
+      "authorAttributions": [
+        {
+          "displayName": "Savelberg",
+          "uri": "https://maps.google.com/maps/contrib/114347459381434421892",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWO68FLjIgLDb9HIyUroO_-1B5urp_4QzG-qbT_mzUSe6y6ZY1J=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIHM0ogKEICAgID2l7qoCA&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIHM0ogKEICAgID2l7qoCA!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMYoz1yYHk33U4oLhGkQHJlyDv1Rbkr6Xsfe4h9vCIjxaQyc0v5F76fAEmYhfw1TCN8-L3YTEClbh9Qrvfg_s7EhDoU1rei2eV5aD90AUtFLR3uWJe3yVNCy-bYmC8qm93TOSWDyGsVRBcRmP3_YuERH6hbOCTbrXmMFx8417V8ZetcrANAypXeoYzUOEBoGsBoXAHtVH83-_IseiC6fNd4qbOOa2uZqMWamdpO8YwfdINHsBtbjJSkgU1lphvdV5o6BU4NOH7Yg3PRKcwkhMr3q6FoCDsIdXdXHQ51CYHdCkX2ZBwhAkAK2YgXYI5g6GuxFoBZ4OIHFMWsZRpNugCq8ZfKXUYoDpFrRWpPmjhoB0xkVwxTZoMTLIeR0XGf1A408kIjje9BITusNuQofUPDERLNQFUbzk3Dmg6qhIZrQ",
+      "widthPx": 4800,
+      "heightPx": 3600,
+      "authorAttributions": [
+        {
+          "displayName": "ma yihan",
+          "uri": "https://maps.google.com/maps/contrib/113159958303011606962",
+          "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocKdzC-u9UPXv1mHBQZfVj_lnQCmuGS1vvHsl4ZBsRDsQaQQvw=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhAfDn73nqYCuLkTRQsxwM3X&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhAfDn73nqYCuLkTRQsxwM3X!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMb82OsgLcOjO8AM571Oh8espfld4MHYW17fDfI_onUqNHdg4vqLLfvMGEs62drZl_piBqfYAms65PdC3wR5OVkIg8-UkTywICbrS_7QA0gcTpw8WKFQPC3HRQPGcz-Mzma4DtQezC8i0iD-CihxGcT8ksGQ5EXD-t78_MOeG9YxMzx2CpH9zoHemLhqXrHr4SsHFgclE4tB0kXRAwymaj5gFWQmyuqx1hWLK_66P6-GlGvXuzctGf74dxBjsDxKVAFOnScWa68fNEuDuWykUo-vqOz4qpvk7l8SZaqZ9XrPh1jaskW3FLztdFT6KA9MkuAkSZ2yZlENNMp-d398KSoQItzUJ7oBHPf4i8vR3-78K0Y2bwicinCD6T1mQ7GfEWNWDgpLtFCUbcTED1yfWOKbKqVrjPP1DkX_kOYszb_zZA",
+      "widthPx": 1080,
+      "heightPx": 1440,
+      "authorAttributions": [
+        {
+          "displayName": "Food Place Price",
+          "uri": "https://maps.google.com/maps/contrib/108829649383847764036",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjXxqynre1HII1-WbFkVlmaDcMiFGdCNDbXMwB2R-eV61it8RZtK=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhAbLpmDXWmsshGuOuXeVa2a&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhAbLpmDXWmsshGuOuXeVa2a!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMa9UexgWLxXoE1eBUBEtEVroWOHNesVpTKXwSSYrbmRM4yHU0wffHmR22pG_YwGFEBDg3QpKXO0-VHHax5nSXNpfKu8vS82eL5z6L2300Lx-JLj_4Q8cUtW9kBdcz8ELFWQ-Ykf7Uam42J4kOkaCfWDd-KiKsYIEOr-rxM-4TS0BwAT-tueL4mUelIg5Ko2p_YvL9a23INCE4hU8A5tjUXUDeYYMUWVp99hjek_LswAeNUfm7LwdXHBVzd387PXZbL4pTuHqMNUAs41zgq9QQGiA2ftuuI5YPIhbHd63sZ_Xq8NmkFb5cvDSSLK34ejiTTvIa9rOFSLL7zJnnu6bRB3OB6YPl-yunVYABgHlHfYpwnZwoGQxHDQ-rn5kS9ukK1MmF9Kbm6dr_VQtuFPXmuM1ZzC4pG_S2rVA9nwjeLk",
+      "widthPx": 3024,
+      "heightPx": 4032,
+      "authorAttributions": [
+        {
+          "displayName": "Kenneth Ngai",
+          "uri": "https://maps.google.com/maps/contrib/105704241480368207950",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjVoQuIUJLFsaJnfp70SlpYtA2TllQdXdErS_CqfU08gfiLAvXdy9A=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhBfhfmdssPD075BrBiWcgrl&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhBfhfmdssPD075BrBiWcgrl!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMZASUmDCFCxDAMDqbdepLJSOXBCtbQQdcsdR9TinSkyWHANgBw5Tk86W3MOOVr9IQYtG502a4N4gD-BqcrjNUg8s2ax7oujcABrP1EZ8cbNUVxLoiugApmSQ-2bW3ysGXAbnpCZsdxEBdhfoNqiYElZsINoTYy_Xtk6D3-Vx3ynRlX0TPTgm3CPZZc_cHKhNyllmbLPqelV0nKn0EFod-rcTSb95bDzUM7m2nQrJjturKpZPJNniWiE1rEk-wHxK7ynbX0O-zsDyhiKk5E20BkYLtGkLE_JyclCoW2ttW3dPlXOOHIm5RqAb51yZE6GHzLWDKDY5mYYyjB39iBUKvI6chwrWSH_kt-rK3GL9RCkKQzrF1iBFqQZJ_yUwnuAkc3aKvXvtJTTtlsWi66ponMtqv00ERpuxeLPg9yrjj8iGA",
+      "widthPx": 1080,
+      "heightPx": 1440,
+      "authorAttributions": [
+        {
+          "displayName": "Food Place Price",
+          "uri": "https://maps.google.com/maps/contrib/108829649383847764036",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjXxqynre1HII1-WbFkVlmaDcMiFGdCNDbXMwB2R-eV61it8RZtK=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhBbY6cnQlfTdBkkd1fLy0rM&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhBbY6cnQlfTdBkkd1fLy0rM!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMZzNDliDoDZ7FRdko3kUqUh9Pn-jNSe3t0oWtPNxBxuoc5F4px3dwXOwMMbkMQk_V_Id_De7wjGb7HGaTcZRLj1x6rlZQ03QuFDU-H45Z7LW1P0QcVwPHdcRv8w6mnTVBMi60sUF-e8f2hx1AHCZpFEutGNiAu5HSwfNSUZBmkevItnZnfmoLVlkEUznIuQj8_C85eikq4jTbLHPYO2qaMi1bL6ZPQFCbAGmjhhQzfb06FtEAdGTK49HI2PY-rTeyu6hkNvnmqtWHLmYU9k6Vl9mzGkGrzYY0jMM-q9t64KLkLUm9d6OlFuxgVqLVf4-KP9j7PX-HGFGayp9ILGYwGGdXSAIyc8hxIFNdY0LqzbRx-95SqBPQaFndIDfwe0fB1MLaIwx7Ih616ZU6HfIG0gCu-WqEBl0OCIzqNi8aJiIA",
+      "widthPx": 1080,
+      "heightPx": 1440,
+      "authorAttributions": [
+        {
+          "displayName": "Food Place Price",
+          "uri": "https://maps.google.com/maps/contrib/108829649383847764036",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjXxqynre1HII1-WbFkVlmaDcMiFGdCNDbXMwB2R-eV61it8RZtK=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhDurCBSVQSaIUBGsRrM3nq2&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhDurCBSVQSaIUBGsRrM3nq2!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMZLGJWA0_jr8fSehiAjo3iTaaIT41Vw1XKddejVUR7K8LKdSTOBt4L7_PEMEmXYnnx4mKZtBIq8hfzJY__iXA-lzNpDkDAsqWARJeXoei86rpVz6pQDJutlnkkBB6F8oHqSGGf0CriCJ9q0sXbYLqvuDGlNadAeGrugV9jXeNf7H3CNhrcEuR1pdf7PdbG1rx-_JG7FMFyDN8RPb_bnMWEHIRt7HBWHRhzQ3VT1aogHc8-7rHPrjiIp646ApX1MC6JJBEDwnSbBN2rAVm8QjF3f3Iui0G5ReA8qfed5xpojXnR-W1_hIezj2VvK9eV9xOUaUuxg5D0nhkNyK10LJCCgYpD5il7ijem6xA8CDYSbE-zDWiKbVon_fofvFRL42wbihNjokBcCj4IfpI5HkYsfDvLgb3KYk00ShuI0m5wSgg",
+      "widthPx": 3024,
+      "heightPx": 4032,
+      "authorAttributions": [
+        {
+          "displayName": "Enjoyvips",
+          "uri": "https://maps.google.com/maps/contrib/103336848191805219493",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjU3FkrglqWK5q23nLqC0nbLfv6wUr5orB7cRkzPJex1VWYU1pA=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIABIhA4MsCgca_J0dgw6u_CSF2X&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIABIhA4MsCgca_J0dgw6u_CSF2X!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMbvm5QS9P8HUYC1Fu9ygxHoJ3RZhzvaSIBbND2vOe1dbDjQfrxaB130a6wmE-qSM5awkigO49KlQv4i1LM23fdN6ahhzrwc2J2ku2gHtpABjwGNyBSBO13iDavB9kxyMCRNBiif1h96qBzTw7Bk1ZhTR1EDqr5C6qXsRenSgB9oDUNhqSC8SHfem03QFuhi3vMporsSA7Q6jGwhJlNex_Ws1TE6KLSoQqae0mk9-Q13WzHgRI8K6_3BRx6jHXVlWifZc82rSE3cksh57gsDqTdZPn0CN-2zI8imcO6LtGPoJgp6_t-IM1p_FNvTDxMTEsP3wtunpdNL6anZe-fspWJUzEd8zuuL5yDwHCcUlkThTg3mdpXlKRHXXCxmhOt7uQSrefuheASKXj5l06D80u2MmF7hfpE",
+      "widthPx": 3024,
+      "heightPx": 4032,
+      "authorAttributions": [
+        {
+          "displayName": "Achi Official",
+          "uri": "https://maps.google.com/maps/contrib/112488768694934599403",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjVbGhIQmETD21Ol30CZCCn95v3_5naqk2cQNW4zl-ov7OAf8xlFcw=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIHM0ogKEICAgMCYyMLhqQE&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIHM0ogKEICAgMCYyMLhqQE!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    },
+    {
+      "name": "places/ChIJC8qDNCGf4jARR-fM5CgWoH4/photos/Aa-ngMa1Kp3MxqEjddli_d11UCmJhPt5TP3lhNrx9aMkEoI7nKKlx20eRJA5IIcULXIMgB9wAho8dAzU3gcpSQUnQauimkX9-4WJPI66a9Q5pcr_4MFPmcAhFD9TChBouKjxzWy5Ee5Hb-RtpfqjxFQDz37WpXdVDVRx-_7oNgEGfjIvS627Jrnsiaaa7ZJmYKwhhbGuxqcjZBA_yvF-TdQXNa69aeoETPAnXWn17Skw0oOHwFbIrD8vPLgp0jgPScp5WmLfdSmD54O98mB6yC5YNO1o4stHm-9yP2EwFz64pGYPE7IyZB4Zd2_aDqQFVw3iSAA3Gzd696UnmD_piRlIwcUmVRNrM373bncpQaAr--h50QI905kHWuMAaV8Eif-2-fN2gha5gq8NJerO-V82cPevd-HF1Po",
+      "widthPx": 1560,
+      "heightPx": 1560,
+      "authorAttributions": [
+        {
+          "displayName": "aiko sephira",
+          "uri": "https://maps.google.com/maps/contrib/106848346494683896990",
+          "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjXjoUZEtQjKENaNFzwq-S6uR3w2zMp77GGMF1lPp8GMkE9y8aU1=s100-p-k-no-mo"
+        }
+      ],
+      "flagContentUri": "https://www.google.com/local/content/rap/report?postId=!1e10!2sCIHM0ogKEICAgID3rvmxngE&t=27&cb_client=maps_api_places.places_api&hl=en",
+      "googleMapsUri": "https://www.google.com/maps/place//data=!3m4!1e2!3m2!1sCIHM0ogKEICAgID3rvmxngE!2e10!4m2!3m1!1s0x30e29f213483ca0b:0x7ea01628e4cce747"
+    }
+  ]
+}
