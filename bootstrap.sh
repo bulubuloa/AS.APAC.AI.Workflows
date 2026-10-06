@@ -99,6 +99,13 @@ CMD
   mkdir -p "$CODEX_HOME/prompts"
   backup "$CODEX_HOME/AGENTS.md"; sed 's/Co-Authored-By: Claude/Co-Authored-By: Codex/' "$KIT/claude/CLAUDE.md" > "$CODEX_HOME/AGENTS.md"
   for c in "$KIT"/codex/prompts/*.md; do cp "$c" "$CODEX_HOME/prompts/"; done
+  # newer Codex replaced custom prompts with skills ($task-fetch ...): same text, SKILL.md frontmatter
+  for c in "$KIT"/codex/prompts/*.md; do
+    n="$(basename "$c" .md)"; d="$HOME/.agents/skills/$n"; mkdir -p "$d"
+    { printf -- '---\nname: %s\ndescription: "%s. Use only when the user invokes $%s."\n---\n\n' "$n" "$(sed -n 's/^description: //p' "$c" | head -1 | tr -d '"\r' | sed 's/\.$//')" "$n"
+      printf 'Invoked as `$%s <input>`; below, `$ARGUMENTS` is the text the user wrote after the skill name (ask if it is missing).\n\n' "$n"
+      tr -d '\r' < "$c" | awk 'NR==1 && /^---$/ {f=1; next} f && /^---$/ {f=0; next} !f'; } > "$d/SKILL.md"
+  done
   # Codex reads AGENTS.md from the git root down to cwd; the workspace folder is not a repo, so each repo's
   # AGENTS.md carries the workspace map + the Codex memory preamble + the repo's own instructions.
   backup "$WS/AGENTS.md"; cat "$KIT/codex/AGENTS.preamble.md" "$KIT/workspace/CLAUDE.md" > "$WS/AGENTS.md"
@@ -109,12 +116,25 @@ CMD
       backup "$dir/AGENTS.md"; { cat "$KIT/codex/AGENTS.preamble.md"; echo "# Workspace map (from ai-workspace/workspace/CLAUDE.md)"; echo; cat "$KIT/workspace/CLAUDE.md"; echo; echo "---"; echo; cat "$r/CLAUDE.md"; } > "$dir/AGENTS.md"
     done
   done
-  # config.toml: append the snippet sections that are not there yet; trust the workspace project
+  # MCP servers = the [mcp_servers.*] blocks of codex/config.snippet.toml (one block per server, ends at a blank line)
+  mcp_blocks() { tr -d '\r' < "$KIT/codex/config.snippet.toml" | awk '/^\[mcp_servers\./ {p=1} /^[[:space:]]*$/ {if (p) print ""; p=0} p'; }
   cfg="$CODEX_HOME/config.toml"; touch "$cfg"; backup "$cfg"
-  grep -q '\[mcp_servers.atlassian-isos\]' "$cfg" || printf '\n[mcp_servers.atlassian-isos]\nurl = "https://mcp.atlassian.com/v1/mcp"\n' >> "$cfg"
-  grep -q '\[mcp_servers.playwright\]' "$cfg" || printf '\n[mcp_servers.playwright]\ntype = "stdio"\ncommand = "npx"\nargs = ["-y", "@playwright/mcp@latest"]\n' >> "$cfg"
-  grep -q "\[projects.\"$WS\"\]" "$cfg" || printf '\n[projects."%s"]\ntrust_level = "trusted"\n' "$WS" >> "$cfg"
-  say "codex: AGENTS.md (global, workspace, repos), prompts, MCP servers in config.toml — run: codex mcp login atlassian-isos"
+  # global: add the servers config.toml does not have yet (kept for codex runs outside the repos)
+  hdr=""; blk=""
+  flush() { if [ -n "$hdr" ] && ! grep -qF "$hdr" "$cfg"; then printf '\n%s\n' "$blk" >> "$cfg"; say "codex: added $hdr to config.toml"; fi; hdr=""; blk=""; }
+  while IFS= read -r line; do case "$line" in "[mcp_servers."*) flush; hdr="$line"; blk="$line";; "") flush;; *) [ -n "$hdr" ] && blk="$blk"$'\n'"$line";; esac; done < <(mcp_blocks); flush
+  # native codex.exe knows the folder as C:\..., not /c/... - a Git-Bash path in [projects] never matches
+  winpath() { if command -v cygpath >/dev/null; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
+  trust() { local p; p="$(winpath "$1")"; grep -qF "[projects.'$p']" "$cfg" || grep -qF "[projects.\"$p\"]" "$cfg" || printf "\n[projects.'%s']\ntrust_level = \"trusted\"\n" "$p" >> "$cfg"; }
+  trust "$WS"
+  # per repo: .codex/config.toml with the same servers (Codex's .mcp.json); Codex loads it only for a trusted repo
+  for dir in "$WS" "$WS"/*/; do
+    dir="${dir%/}"; [ "$dir" = "$WS" ] || [ -f "$dir/CLAUDE.md" ] || continue
+    mkdir -p "$dir/.codex"; { echo "# installed by ai-workspace bootstrap from codex/config.snippet.toml - MCP servers for Codex here"; echo; mcp_blocks; } > "$dir/.codex/config.toml"
+    [ "$dir" = "$WS" ] || trust "$dir"
+    if [ -d "$dir/.git" ]; then grep -qx ".codex/" "$dir/.git/info/exclude" 2>/dev/null || echo ".codex/" >> "$dir/.git/info/exclude"; fi
+  done
+  say "codex: AGENTS.md (global, workspace, repos), prompts + skills, MCP servers (config.toml + each repo .codex/config.toml) — run: codex mcp login atlassian-isos"
 fi
 
 # 6. Secret guard for this repo

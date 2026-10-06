@@ -32,10 +32,14 @@ if ((Test-Path $CodexHome) -or (Get-Command codex -ErrorAction SilentlyContinue)
   if (Get-Command codex -ErrorAction SilentlyContinue) {
     OK 'codex on PATH'
     if ((cmd /c "codex mcp list 2>nul") -match 'atlassian-isos') { OK 'codex sees MCP atlassian-isos (login: codex mcp login atlassian-isos)' } else { Bad 'codex mcp list has no atlassian-isos - re-run bootstrap.ps1' }
+    $cc = if (Test-Path (Join-Path $CodexHome 'config.toml')) { Get-Content (Join-Path $CodexHome 'config.toml') -Raw } else { '' }
+    foreach ($r in 'ABMB','ABVB','ABF','ABCB','ABCB.Clone','ABMR') { $d = Join-Path $WS $r; if (-not (Test-Path $d)) { continue }
+      if ((Test-Path (Join-Path $d '.codex\config.toml')) -and $cc.Contains("$d'")) { OK "codex repo MCP: $r\.codex\config.toml (trusted)" } else { Bad "codex repo MCP: $r\.codex\config.toml or its trust entry missing - re-run bootstrap.ps1" } }
   } else { Bad 'codex not on PATH (Codex app installed?) - re-run bootstrap.ps1 to add the ~\.local\bin launcher' }
   if (Test-Path (Join-Path $CodexHome 'AGENTS.md')) { OK '~\.codex\AGENTS.md' } else { Bad '~\.codex\AGENTS.md' }
   if (Test-Path (Join-Path $WS 'AGENTS.md')) { OK 'workspace AGENTS.md' } else { Bad 'workspace AGENTS.md' }
   if (Test-Path (Join-Path $CodexHome 'prompts\task-fetch.md')) { OK '/prompts:task-fetch' } else { Bad 'codex prompt task-fetch' }
+  if (Test-Path (Join-Path $env:USERPROFILE '.agents\skills\task-fetch\SKILL.md')) { OK 'skill $task-fetch' } else { Bad 'codex skill task-fetch (~\.agents\skills) - re-run bootstrap.ps1' }
   if ((Test-Path (Join-Path $CodexHome 'config.toml')) -and ((Get-Content (Join-Path $CodexHome 'config.toml') -Raw) -match 'mcp_servers\.atlassian-isos')) { OK 'codex MCP atlassian-isos in config.toml (login: codex mcp login atlassian-isos)' } else { Bad 'codex MCP atlassian-isos' }
 } else { OK 'codex not installed - skipped' }
 

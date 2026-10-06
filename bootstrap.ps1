@@ -109,6 +109,15 @@ exit /b 1
   New-Item -ItemType Directory -Force (Join-Path $CodexHome 'prompts') | Out-Null
   (Get-Content (Join-Path $Kit 'claude\CLAUDE.md') -Raw) -replace 'Co-Authored-By: Claude', 'Co-Authored-By: Codex' | Set-Content (Join-Path $CodexHome 'AGENTS.md')
   Get-ChildItem (Join-Path $Kit 'codex\prompts\*.md') | Copy-Item -Destination (Join-Path $CodexHome 'prompts')
+  # newer Codex replaced custom prompts with skills ($task-fetch ...): same text, SKILL.md frontmatter
+  Get-ChildItem (Join-Path $Kit 'codex\prompts\*.md') | ForEach-Object {
+    $n = $_.BaseName; $d = Join-Path $env:USERPROFILE ".agents\skills\$n"; New-Item -ItemType Directory -Force $d | Out-Null
+    $raw = (Get-Content $_.FullName -Raw) -replace '\r', ''
+    $desc = ([regex]::Match($raw, '(?m)^description: (.*)$').Groups[1].Value).Trim() -replace '"', '' -replace '\.$', ''
+    $body = $raw -replace '(?s)^---\n.*?\n---\n', ''
+    $head = "---`nname: $n`ndescription: `"$desc. Use only when the user invokes `$$n.`"`n---`n`nInvoked as ``$$n <input>``; below, ``$ARGUMENTS`` is the text the user wrote after the skill name (ask if it is missing).`n`n"
+    [IO.File]::WriteAllText((Join-Path $d 'SKILL.md'), $head + $body)
+  }
   $pre = Get-Content (Join-Path $Kit 'codex\AGENTS.preamble.md') -Raw; $wsmap = Get-Content (Join-Path $Kit 'workspace\CLAUDE.md') -Raw
   Set-Content (Join-Path $WS 'AGENTS.md') ($pre + $wsmap)
   Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
@@ -118,11 +127,23 @@ exit /b 1
   }
   $cfg = Join-Path $CodexHome 'config.toml'; if (-not (Test-Path $cfg)) { New-Item $cfg -ItemType File | Out-Null }
   $c = Get-Content $cfg -Raw
-  if ($c -notmatch '\[mcp_servers\.atlassian-isos\]') { Add-Content $cfg "`n[mcp_servers.atlassian-isos]`nurl = `"https://mcp.atlassian.com/v1/mcp`"" }
-  if ($c -notmatch '\[mcp_servers\.playwright\]')     { Add-Content $cfg "`n[mcp_servers.playwright]`ntype = `"stdio`"`ncommand = `"npx`"`nargs = [`"-y`", `"@playwright/mcp@latest`"]" }
-  $wsToml = $WS -replace '\\', '\\\\'
-  if ($c -notmatch [regex]::Escape("[projects.`"$wsToml`"]")) { Add-Content $cfg "`n[projects.`"$wsToml`"]`ntrust_level = `"trusted`"" }
-  Say 'codex: AGENTS.md (global, workspace, repos), prompts, MCP servers in config.toml - run: codex mcp login atlassian-isos'
+  # MCP servers = the [mcp_servers.*] blocks of codex\config.snippet.toml (one block per server, ends at a blank line)
+  $snip = (Get-Content (Join-Path $Kit 'codex\config.snippet.toml') -Raw) -replace '\r', ''
+  $blocks = @([regex]::Matches($snip, '(?m)^\[mcp_servers\.[^\]]+\]\n(?:[^\n]+\n?)*') | ForEach-Object { $_.Value.TrimEnd() })
+  # global: add the servers config.toml does not have yet (kept for codex runs outside the repos)
+  foreach ($b in $blocks) { $hdr = ($b -split '\n')[0]; if ($c -notmatch [regex]::Escape($hdr)) { Add-Content $cfg ("`n" + $b); Say "codex: added $hdr to config.toml" } }
+  function Trust($p) { $c2 = Get-Content $cfg -Raw; if ($c2 -notmatch [regex]::Escape("[projects.'$p']") -and $c2 -notmatch [regex]::Escape("[projects.`"$($p -replace '\\', '\\\\')`"]")) { Add-Content $cfg "`n[projects.'$p']`ntrust_level = `"trusted`"" } }
+  Trust $WS
+  # per repo: .codex\config.toml with the same servers (Codex's .mcp.json); Codex loads it only for a trusted repo
+  $proj = "# installed by ai-workspace bootstrap from codex/config.snippet.toml - MCP servers for Codex here`n`n" + ($blocks -join "`n`n") + "`n"
+  foreach ($dir in @($WS) + @(Get-ChildItem $WS -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'CLAUDE.md') } | ForEach-Object { $_.FullName })) {
+    New-Item -ItemType Directory -Force (Join-Path $dir '.codex') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $dir '.codex\config.toml'), $proj)
+    if ($dir -ne $WS) { Trust $dir }
+    $ex = Join-Path $dir '.git\info\exclude'
+    if ((Test-Path (Join-Path $dir '.git')) -and -not ((Test-Path $ex) -and (Select-String -Path $ex -Pattern '^\.codex/$' -Quiet))) { New-Item -ItemType Directory -Force (Split-Path $ex) | Out-Null; Add-Content $ex '.codex/' }
+  }
+  Say 'codex: AGENTS.md (global, workspace, repos), prompts + skills, MCP servers (config.toml + each repo .codex\config.toml) - run: codex mcp login atlassian-isos'
 }
 
 # 6. Secret guard (git runs hooks under its own bash; perl ships with Git for Windows)

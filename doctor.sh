@@ -25,9 +25,12 @@ CODEX_WIN_BIN="${LOCALAPPDATA:+$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/OpenAI/
 if [ -d "$HOME/.codex" ] || command -v codex >/dev/null || { [ -n "$CODEX_WIN_BIN" ] && [ -d "$CODEX_WIN_BIN" ]; }; then
   command -v codex >/dev/null && ok "codex on PATH" || bad "codex not on PATH (Codex app installed?) - re-run bootstrap.sh to add the ~/.local/bin launcher"
   if command -v codex >/dev/null; then codex mcp list 2>/dev/null | grep -q atlassian-isos && ok "codex sees MCP atlassian-isos (login: codex mcp login atlassian-isos)" || bad "codex mcp list has no atlassian-isos - re-run bootstrap.sh"; fi
+  for r in ABMB ABVB ABF ABCB ABCB.Clone ABMR; do [ -d "$WS/$r" ] || continue; p="$( { command -v cygpath >/dev/null && cygpath -w "$WS/$r"; } || echo "$WS/$r")"
+    [ -f "$WS/$r/.codex/config.toml" ] && grep -qF "$p'" "$HOME/.codex/config.toml" 2>/dev/null && ok "codex repo MCP: $r/.codex/config.toml (trusted)" || bad "codex repo MCP: $r/.codex/config.toml or its trust entry missing - re-run bootstrap.sh"; done
   [ -f "$HOME/.codex/AGENTS.md" ] && ok "~/.codex/AGENTS.md" || bad "~/.codex/AGENTS.md"
   [ -f "$WS/AGENTS.md" ] && ok "workspace AGENTS.md" || bad "workspace AGENTS.md"
   [ -f "$HOME/.codex/prompts/task-fetch.md" ] && ok "/prompts:task-fetch" || bad "codex prompt task-fetch"
+  [ -f "$HOME/.agents/skills/task-fetch/SKILL.md" ] && ok "skill \$task-fetch" || bad "codex skill task-fetch (~/.agents/skills) - re-run bootstrap.sh"
   grep -q 'mcp_servers.atlassian-isos' "$HOME/.codex/config.toml" 2>/dev/null && ok "codex MCP atlassian-isos in config.toml (login: codex mcp login atlassian-isos)" || bad "codex MCP atlassian-isos"
 else ok "codex not installed — skipped"; fi
 echo "access"
