@@ -50,5 +50,8 @@ aws secretsmanager describe-secret --secret-id benefit-connection-string-preprod
 foreach ($t in @(@(3375,'Benefit SIT/UAT MySQL (benefit-sit cluster)'), @(3382,'Benefit PROD MySQL (read-only use)'), @(3383,'RSA PROD MSSQL'))) {
   if (Get-NetTCPConnection -State Listen -LocalPort $t[0] -ErrorAction SilentlyContinue) { OK "tunnel $($t[0]) $($t[1])" } else { Bad "tunnel $($t[0]) $($t[1]) not listening" }
 }
+$env:GIT_TERMINAL_PROMPT = '0'; $env:GCM_INTERACTIVE = 'never'
+git ls-remote https://bitbucket.org/internationalsos/apac-benefit-vendor-backend.git HEAD *> $null; if ($LASTEXITCODE -eq 0) { OK 'Bitbucket sign-in (git over HTTPS)' } else { Bad 'Bitbucket not signed in (re-run .\clone.ps1 - browser OAuth)' }
+Remove-Item env:GIT_TERMINAL_PROMPT, env:GCM_INTERACTIVE
 if (Have 'twg') { twg confluence space get AD *> $null; if ($LASTEXITCODE -eq 0) { OK 'twg Confluence (AD space)' } else { Bad 'twg not authenticated (run: twg confluence space get AD)' } }
 Write-Host 'done'

@@ -14,19 +14,19 @@ each developer's own OAuth logins; this repo only says *where* they are.
 |---|---|---|
 | `claude/CLAUDE.md` | Global working preferences (comment style, commit format, no AI trailers) | `~/.claude/CLAUDE.md` |
 | `claude/commands/*.md` | Slash commands for the whole loop: `/task-fetch` (Jira → task file), `/task-analyse` (read-only analysis), `/task-implement` (branch from the right base, code, build, tests, commits), `/task-verify` (evidence: browser, DB, logs), `/task-deliver` (PR text, QA comment, release notes, memory), `/task-run` (all of them, with pauses / `--cowork` / `--auto`) | `<workspace>/.claude/commands/` |
-| `codex/` | The same for OpenAI Codex CLI: `config.snippet.toml` (MCP servers, sandbox), `prompts/` (installed as skills `$task-*` in `~/.agents/skills`, and as `/prompts:task-*` for older Codex); MCP servers go to `~/.codex/config.toml` and to each repo's `.codex/config.toml` (Codex's `.mcp.json`, loaded for trusted repos), `AGENTS.preamble.md` (how Codex reads/writes the shared memory) | `~/.codex/`, `AGENTS.md` next to each `CLAUDE.md` |
+| `codex/` | The same for OpenAI Codex CLI: `config.snippet.toml` (MCP servers, sandbox), `prompts/` (`/prompts:task-*`), `AGENTS.preamble.md` (how Codex reads/writes the shared memory) | `~/.codex/`, `AGENTS.md` next to each `CLAUDE.md` |
 | `claude/settings.json` | Permission allow/deny rules: reads silent, writes prompted | `<workspace>/.claude/settings.json` |
 | `claude/mcp.json` | MCP servers as a project config file (`atlassian-isos` HTTP, `playwright` stdio) | `<workspace>/.mcp.json` and `<repo>/.mcp.json` (git-excluded) |
 | `claude/mcp.sh` | The MCP servers to register (Atlassian, Playwright) | `claude mcp add …` (user scope) |
 | `workspace/CLAUDE.md` | Workspace instructions: repo map, branch → environment, environments, access, conventions, where the docs are | `<workspace>/CLAUDE.md` |
-| `workspace/repos/<REPO>/CLAUDE.md` | Per-repo instructions (ABCB, ABMB, ABF, ABVB, ABMR) | `<workspace>/<repo dir>/CLAUDE.md` |
+| `workspace/repos/<REPO>/CLAUDE.md` | Per-repo instructions (ABCB, ABMB, ABF, ABVB) | `<workspace>/<repo dir>/CLAUDE.md` |
 | `memory/<name>/*.md` | The agent's project memory — every non-obvious fact learned on these projects (env ids, drifted SPs, pipeline quirks, incidents) | symlinked into `~/.claude/projects/<slug>/memory` |
 | `access/ACCESS.md` | Access recipes: which tunnel port is which database, which secret holds which connection string, AWS account, CMS environments, mail rules | read by the agent via `workspace/CLAUDE.md` |
 | `access/tunnels.env`, `tunnel.sh` / `tunnel.ps1` | Bastion + RDS targets per local port (no secrets) and the `up`/`down`/`status` script; the PEM key is yours (`~/.ssh/ABE.pem` or `ABE_SSH_KEY`) | run when you need a database |
 | `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
 | `tools.sh` / `tools.ps1` | Install the CLIs (brew/apt / winget, Claude Code, twg, python helpers; Windows: Zscaler CA bundle) | called by bootstrap |
-| `clone.sh` / `clone.ps1` | Clone the six product checkouts side by side on their working branches | called by bootstrap |
+| `clone.sh` / `clone.ps1` | Bitbucket OAuth sign-in (Git Credential Manager, browser once), then clone the five product checkouts side by side on their working branches | called by bootstrap |
 | `bootstrap.sh` / `bootstrap.ps1` | One-shot setup: tools -> repos -> kit (global + workspace + per-repo instructions, commands, permissions, MCP, memory links) | — |
 | `doctor.sh` / `doctor.ps1` | Verify the setup, one line per check | — |
 
@@ -41,7 +41,8 @@ Three steps on every platform: clone the kit, run its bootstrap, do the three lo
 mkdir -p ~/Projects/AspireDigital && cd ~/Projects/AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
-# 2. Bootstrap: tools (brew/apt, Claude Code, twg), the six product repos on their working branches, the kit itself
+# 2. Bootstrap: tools (brew/apt, Claude Code, twg, Git Credential Manager), Bitbucket OAuth in the browser, the five
+#    product repos on their working branches, the kit itself
 ./ai-workspace/bootstrap.sh        # idempotent - re-run any time; NO_TOOLS=1 / NO_CLONE=1 skip those parts
 
 # 3. Log in (browser opens each time), then check
@@ -87,11 +88,11 @@ Then, in any repo: `claude` → `/task-run ABE-xxxx` (pauses after fetch and aft
 - **WSL2 is also fine** — install Ubuntu from the Store, keep the workspace *inside* the WSL filesystem (`~/Projects/AspireDigital`, not `/mnt/c/...` — git and builds are far faster) and use the macOS/Linux steps unchanged. Windows-only work (RoadSide `.NET Framework 4.8` builds in Visual Studio) stays on the Windows side.
 - **Corporate TLS (Zscaler)** — python/node-based CLIs (aws, pip, npx) reject the proxy's certificate out of the box (`CERTIFICATE_VERIFY_FAILED`). `tools.ps1` detects the Zscaler root in the Windows store, writes `~\.aws\ca-bundle.pem` (public CAs + Zscaler) and sets `AWS_CA_BUNDLE`, `REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`, `NODE_EXTRA_CA_CERTS` for your user. Open a new window afterwards.
 - `-ExecutionPolicy Bypass` only matters if scripts are blocked on your machine (`.\bootstrap.ps1` works otherwise). Memory and `issues/` become directory **junctions** (no admin rights needed); the project slug follows Claude Code's Windows rule (`C:\Projects\AspireDigital` → `C--Projects-AspireDigital`); the pre-commit guard runs under Git for Windows' bash + perl. Inside a `claude` session, run scripts with `! powershell -File ./bootstrap.ps1` — the `!` prefix is Git Bash, so `.\` backslashes don't work there.
-- Codex on Windows: the Codex desktop app keeps `codex.exe` in `%LOCALAPPDATA%\OpenAI\Codex\bin\<hash>\` (not on PATH, hash changes per update). Both bootstraps add a `codex` / `codex.cmd` launcher in `~/.local/bin` that runs the newest one, so `codex mcp login atlassian-isos` works from Git Bash, cmd and PowerShell.
+- Codex CLI on Windows is best run inside WSL; the PowerShell bootstrap still writes the `AGENTS.md`/prompts/config if `~\.codex` exists.
 
 ## Codex CLI instead of Claude Code
 
-`bootstrap.sh` installs the Codex equivalents when Codex is present - `~/.codex` exists, `codex` is on PATH, the Codex/ChatGPT desktop app is installed, or `WITH_CODEX=1` - so a Codex installed after the first bootstrap is picked up by re-running it: `~/.codex/AGENTS.md` (global preferences), an `AGENTS.md` in the workspace and in each repo (workspace map + the Codex memory preamble + the repo instructions, because Codex reads `AGENTS.md` from the git root, not from parent folders), the six prompts in `~/.codex/prompts/`, and the MCP servers + trusted project in `~/.codex/config.toml`. Then `codex mcp login atlassian-isos`. Codex has no automatic project memory, so its `AGENTS.md` tells it to read `ai-workspace/memory/*/MEMORY.md` at the start of a session and to write notes at the end — the notes are the same files either agent uses. Permissions are coarser than Claude's allow-list: `sandbox_mode = "workspace-write"`, `approval_policy = "on-request"`, network on.
+`bootstrap.sh` installs the Codex equivalents when `~/.codex` exists (or `WITH_CODEX=1`): `~/.codex/AGENTS.md` (global preferences), an `AGENTS.md` in the workspace and in each repo (workspace map + the Codex memory preamble + the repo instructions, because Codex reads `AGENTS.md` from the git root, not from parent folders), the six prompts in `~/.codex/prompts/`, and the MCP servers + trusted project in `~/.codex/config.toml`. Then `codex mcp login atlassian-isos`. Codex has no automatic project memory, so its `AGENTS.md` tells it to read `ai-workspace/memory/*/MEMORY.md` at the start of a session and to write notes at the end — the notes are the same files either agent uses. Permissions are coarser than Claude's allow-list: `sandbox_mode = "workspace-write"`, `approval_policy = "on-request"`, network on.
 
 ## Keeping it current — the one rule
 

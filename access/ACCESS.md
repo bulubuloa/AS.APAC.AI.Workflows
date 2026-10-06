@@ -66,7 +66,9 @@ Missing rule = sender gets "550 mailbox not available".
   blocked on this tenant → `twg` CLI (OAuth on first run). Page attachments (diagram images) → REST with a
   personal API token stored at `~/.config/atlassian/token` (mode 600), basic auth `email:token`,
   header `X-Atlassian-Token: nocheck`.
-- Bitbucket: HTTPS with your app password in the git credential helper; agent shells normally cannot push.
+- Bitbucket: HTTPS with OAuth through Git Credential Manager, scoped to `bitbucket.org` (`clone.sh` sets it up and opens
+  the browser once; token in Keychain / Windows Credential Manager). No GCM: a Bitbucket API token (app passwords are retired).
+  Re-login: delete the `bitbucket.org` entry in Keychain Access / Windows Credential Manager, then re-run `clone.sh`.
 
 ## Servers (RoadSide)
 
