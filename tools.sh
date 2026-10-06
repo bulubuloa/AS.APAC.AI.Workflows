@@ -13,11 +13,15 @@ if have brew; then
     if have "$cmd"; then say "$cmd present"; continue; fi
     say "brew install $pkg"; brew install "$pkg" >/dev/null 2>&1 || warn "brew install $pkg failed - install it by hand"
   done
+  # Git Credential Manager = Bitbucket OAuth for clone.sh; the cask's postinstall takes over every host, so hand
+  # the others back - clone.sh scopes it to bitbucket.org
+  if ! have git-credential-manager; then say 'brew install --cask git-credential-manager'; brew install --cask git-credential-manager >/dev/null 2>&1 && git-credential-manager unconfigure >/dev/null 2>&1 || warn 'git-credential-manager install failed - git will prompt for a Bitbucket API token'; fi
   have mysql || { [ -x /opt/homebrew/opt/mysql-client/bin/mysql ] && warn 'mysql is keg-only: add /opt/homebrew/opt/mysql-client/bin to PATH'; }
 elif have apt-get; then
   say 'apt install git nodejs npm awscli python3 python3-pip mysql-client'
   sudo apt-get install -y -qq git nodejs npm awscli python3 python3-pip mysql-client >/dev/null || warn 'apt install failed - install the tools by hand'
   have dotnet || warn '.NET SDK 8: https://learn.microsoft.com/dotnet/core/install/linux'
+  have git-credential-manager || [ -x "/mnt/c/Program Files/Git/mingw64/bin/git-credential-manager.exe" ] || warn 'Bitbucket OAuth: install Git Credential Manager (https://github.com/git-ecosystem/git-credential-manager/blob/main/docs/install.md)'
   have sqlcmd || warn 'sqlcmd: https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-utility#download-and-install-sqlcmd'
 else
   warn 'no brew/apt found - install git, node, awscli, python3, mysql-client, sqlcmd, dotnet by hand'

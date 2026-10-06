@@ -26,7 +26,7 @@ each developer's own OAuth logins; this repo only says *where* they are.
 | `issues/` | Task files, one per ticket (`ABE-xxxx.md`: brief → analysis → implementation → verification → release) plus runbooks. Work in progress lives here so anyone can pick it up | symlinked as `<workspace>/issues` |
 | `confluence/` | Generators for the Confluence pages (Data Processors client pages, AI workflow series) | run when the pages change |
 | `tools.sh` / `tools.ps1` | Install the CLIs (brew/apt / winget, Claude Code, twg, python helpers; Windows: Zscaler CA bundle) | called by bootstrap |
-| `clone.sh` / `clone.ps1` | Clone the five product checkouts side by side on their working branches | called by bootstrap |
+| `clone.sh` / `clone.ps1` | Bitbucket OAuth sign-in (Git Credential Manager, browser once), then clone the five product checkouts side by side on their working branches | called by bootstrap |
 | `bootstrap.sh` / `bootstrap.ps1` | One-shot setup: tools -> repos -> kit (global + workspace + per-repo instructions, commands, permissions, MCP, memory links) | — |
 | `doctor.sh` / `doctor.ps1` | Verify the setup, one line per check | — |
 
@@ -41,7 +41,8 @@ Three steps on every platform: clone the kit, run its bootstrap, do the three lo
 mkdir -p ~/Projects/AspireDigital && cd ~/Projects/AspireDigital
 git clone https://github.com/bulubuloa/AS.APAC.AI.Workflows.git ai-workspace
 
-# 2. Bootstrap: tools (brew/apt, Claude Code, twg), the five product repos on their working branches, the kit itself
+# 2. Bootstrap: tools (brew/apt, Claude Code, twg, Git Credential Manager), Bitbucket OAuth in the browser, the five
+#    product repos on their working branches, the kit itself
 ./ai-workspace/bootstrap.sh        # idempotent - re-run any time; NO_TOOLS=1 / NO_CLONE=1 skip those parts
 
 # 3. Log in (browser opens each time), then check
