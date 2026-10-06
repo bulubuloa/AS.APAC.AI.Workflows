@@ -19,5 +19,9 @@ POC for Sanchit (due 30 Sep 2026): `GooglePlaceAPI.POC/` (Vite+React, `npm run d
 
 - 30 Sep 2026 decision (user, after Sanchit review): **live** — CMS stores google_place_id + our own filterable values (city, country, cuisine, price, name); address/hours/phone/website/rating/photos read live from Google on the website. Minimum PD input measured: name+country 92% top-1, +postal code 100% (docs/PD-ONBOARDING.md).
 
+- 5-6 Oct 2026: category/sub-category filter (vendors only hold `category_text`/`sub_category_text`, mapped onto the CMS Category/Sub-Category lists; Restaurant/Catering/Food Order have no code); matcher picks the expected Google type per sub-category (`EXPECT` in `src/lib/match.js`). Spa PROD: 12 vendors, 5 HIGH/3 MED/4 AMBIG — hotel spas match the hotel.
+- Cost: "Google cost" tab + `docs/google-places-cost.xlsx` (`docs/build_cost_sheet.py`). POC Details mask is Enterprise+Atmosphere ($25/1k) because of 8 atmosphere fields; full PROD backfill ≈ $178 list / $39 after free caps; the live-read website is the real cost (≈$920/mo at 20k views, photos ≈ half).
+- Key swapped 6 Oct 2026 to a new key (Lambda env `GOOGLE_PLACES_API_KEY` + `.env.local`); old key ended …41uU.
+
 **Why:** Google terms only allow storing Place ID → recommended design is store `google_place_id` on `location`, fetch the rest live.
 **How to apply:** Reuse the app/findings if the ticket comes; don't propose copying Google fields into CMS. Related: [[abe-repo-aliases-and-cms-modules]].
