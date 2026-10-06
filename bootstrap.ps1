@@ -20,6 +20,12 @@ function Backup($path, $incoming) {  # copy aside unless identical
 # Claude Code keys project memory by the absolute path with every non-alphanumeric character turned into '-'
 # e.g. C:\Users\me\Projects\AspireDigital -> C--Users-me-Projects-AspireDigital
 function Slug($p) { return ($p -replace '[^A-Za-z0-9]', '-') }
+# the running Codex app keeps its files open; Get/Set/Add-Content then fail ("stream was not readable") - open shared, retry
+function Read-Shared($p) { if (-not (Test-Path $p)) { return '' }; for ($i = 0; $i -lt 10; $i++) { try { $fs = [IO.File]::Open($p, 'Open', 'Read', 'ReadWrite, Delete'); try { return (New-Object IO.StreamReader($fs)).ReadToEnd() } finally { $fs.Dispose() } } catch { Start-Sleep -Milliseconds 300 } }; throw "cannot read $p - close the Codex app and re-run" }
+function Write-Shared($p, $text, [switch]$Append) {
+  for ($i = 0; $i -lt 10; $i++) { try { $fs = [IO.File]::Open($p, $(if ($Append) { 'Append' } else { 'Create' }), 'Write', 'ReadWrite, Delete'); try { $b = (New-Object Text.UTF8Encoding($false)).GetBytes($text); $fs.Write($b, 0, $b.Length) } finally { $fs.Dispose() }; return } catch { Start-Sleep -Milliseconds 300 } }
+  Warn "could not write $p (locked by another program) - close the Codex app and re-run"
+}
 
 Say "workspace: $WS"
 if (-not (Test-Path $WS)) { throw "workspace folder not found: $WS (pass -Workspace)" }
@@ -107,7 +113,7 @@ exit /b 1
     Say 'codex: launcher ~\.local\bin\codex.cmd -> newest Codex app codex.exe'
   }
   New-Item -ItemType Directory -Force (Join-Path $CodexHome 'prompts') | Out-Null
-  (Get-Content (Join-Path $Kit 'claude\CLAUDE.md') -Raw) -replace 'Co-Authored-By: Claude', 'Co-Authored-By: Codex' | Set-Content (Join-Path $CodexHome 'AGENTS.md')
+  Write-Shared (Join-Path $CodexHome 'AGENTS.md') ((Get-Content (Join-Path $Kit 'claude\CLAUDE.md') -Raw) -replace 'Co-Authored-By: Claude', 'Co-Authored-By: Codex')
   Get-ChildItem (Join-Path $Kit 'codex\prompts\*.md') | Copy-Item -Destination (Join-Path $CodexHome 'prompts')
   # newer Codex replaced custom prompts with skills ($task-fetch ...): same text, SKILL.md frontmatter
   Get-ChildItem (Join-Path $Kit 'codex\prompts\*.md') | ForEach-Object {
@@ -116,29 +122,29 @@ exit /b 1
     $desc = ([regex]::Match($raw, '(?m)^description: (.*)$').Groups[1].Value).Trim() -replace '"', '' -replace '\.$', ''
     $body = $raw -replace '(?s)^---\n.*?\n---\n', ''
     $head = "---`nname: $n`ndescription: `"$desc. Use only when the user invokes `$$n.`"`n---`n`nInvoked as ``$$n <input>``; below, ``$ARGUMENTS`` is the text the user wrote after the skill name (ask if it is missing).`n`n"
-    [IO.File]::WriteAllText((Join-Path $d 'SKILL.md'), $head + $body)
+    Write-Shared (Join-Path $d 'SKILL.md') ($head + $body)
   }
   $pre = Get-Content (Join-Path $Kit 'codex\AGENTS.preamble.md') -Raw; $wsmap = Get-Content (Join-Path $Kit 'workspace\CLAUDE.md') -Raw
-  Set-Content (Join-Path $WS 'AGENTS.md') ($pre + $wsmap)
+  Write-Shared (Join-Path $WS 'AGENTS.md') ($pre + $wsmap)
   Get-ChildItem (Join-Path $Kit 'workspace\repos') -Directory | ForEach-Object {
     foreach ($dir in @((Join-Path $WS "$($_.Name)"), (Join-Path $WS "$($_.Name).Clone"))) {
-      if (Test-Path $dir) { Set-Content (Join-Path $dir 'AGENTS.md') ($pre + "# Workspace map (from ai-workspace/workspace/CLAUDE.md)`n`n" + $wsmap + "`n---`n`n" + (Get-Content (Join-Path $_.FullName 'CLAUDE.md') -Raw)) }
+      if (Test-Path $dir) { Write-Shared (Join-Path $dir 'AGENTS.md') ($pre + "# Workspace map (from ai-workspace/workspace/CLAUDE.md)`n`n" + $wsmap + "`n---`n`n" + (Get-Content (Join-Path $_.FullName 'CLAUDE.md') -Raw)) }
     }
   }
   $cfg = Join-Path $CodexHome 'config.toml'; if (-not (Test-Path $cfg)) { New-Item $cfg -ItemType File | Out-Null }
-  $c = Get-Content $cfg -Raw
+  $c = Read-Shared $cfg
   # MCP servers = the [mcp_servers.*] blocks of codex\config.snippet.toml (one block per server, ends at a blank line)
   $snip = (Get-Content (Join-Path $Kit 'codex\config.snippet.toml') -Raw) -replace '\r', ''
   $blocks = @([regex]::Matches($snip, '(?m)^\[mcp_servers\.[^\]]+\]\n(?:[^\n]+\n?)*') | ForEach-Object { $_.Value.TrimEnd() })
   # global: add the servers config.toml does not have yet (kept for codex runs outside the repos)
-  foreach ($b in $blocks) { $hdr = ($b -split '\n')[0]; if ($c -notmatch [regex]::Escape($hdr)) { Add-Content $cfg ("`n" + $b); Say "codex: added $hdr to config.toml" } }
-  function Trust($p) { $c2 = Get-Content $cfg -Raw; if ($c2 -notmatch [regex]::Escape("[projects.'$p']") -and $c2 -notmatch [regex]::Escape("[projects.`"$($p -replace '\\', '\\\\')`"]")) { Add-Content $cfg "`n[projects.'$p']`ntrust_level = `"trusted`"" } }
+  foreach ($b in $blocks) { $hdr = ($b -split '\n')[0]; if ($c -notmatch [regex]::Escape($hdr)) { Write-Shared $cfg ("`n" + $b + "`n") -Append; Say "codex: added $hdr to config.toml" } }
+  function Trust($p) { $c2 = Read-Shared $cfg; if ($c2 -notmatch [regex]::Escape("[projects.'$p']") -and $c2 -notmatch [regex]::Escape("[projects.`"$($p -replace '\\', '\\\\')`"]")) { Write-Shared $cfg "`n[projects.'$p']`ntrust_level = `"trusted`"`n" -Append } }
   Trust $WS
   # per repo: .codex\config.toml with the same servers (Codex's .mcp.json); Codex loads it only for a trusted repo
   $proj = "# installed by ai-workspace bootstrap from codex/config.snippet.toml - MCP servers for Codex here`n`n" + ($blocks -join "`n`n") + "`n"
   foreach ($dir in @($WS) + @(Get-ChildItem $WS -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'CLAUDE.md') } | ForEach-Object { $_.FullName })) {
     New-Item -ItemType Directory -Force (Join-Path $dir '.codex') | Out-Null
-    [IO.File]::WriteAllText((Join-Path $dir '.codex\config.toml'), $proj)
+    Write-Shared (Join-Path $dir '.codex\config.toml') $proj
     if ($dir -ne $WS) { Trust $dir }
     $ex = Join-Path $dir '.git\info\exclude'
     if ((Test-Path (Join-Path $dir '.git')) -and -not ((Test-Path $ex) -and (Select-String -Path $ex -Pattern '^\.codex/$' -Quiet))) { New-Item -ItemType Directory -Force (Split-Path $ex) | Out-Null; Add-Content $ex '.codex/' }
