@@ -64,14 +64,17 @@ cd ABMB &amp;&amp; git checkout roadside-release-uat &amp;&amp; cd ..</code></pr
 </ol>
 
 <h2>7. Open the database tunnels</h2>
-<p>The RDS endpoints are VPN-gated. Use the bastion and key infra gave you; the <strong>local ports are a shared convention</strong> — the memory notes and scripts assume them.</p>
+<p>The RDS endpoints are private; you reach them through SSH tunnels on the bastion host (<code>ec2-user@13.250.112.53</code>). The <strong>local ports are a shared convention</strong> — the memory notes and scripts assume them. The kit ships the script and the targets; the only thing you bring is the bastion key <code>ABE.pem</code> (from the team, out of band — never chat, email or a ticket).</p>
+<pre><code class="language-bash"># key: ~/.ssh/ABE.pem (macOS/Linux: chmod 400; Windows: ~\.ssh\ABE.pem, the script fixes the ACL) - or ABE_SSH_KEY=&lt;path&gt;
+./ai-workspace/access/tunnel.sh up          # opens 3375 3382 3383; also: status | down | up 3375
+powershell -File .\ai-workspace\access\tunnel.ps1 up      # Windows (built-in OpenSSH)</code></pre>
+<p>If <code>up</code> fails it prints the public IP the bastion sees (on an ISOS laptop that is the Zscaler egress) — the bastion security group <code>sg-006ea52049f6aee44</code> allows port 22 only from known IPs, so send that IP to whoever manages it. Targets and hosts are in <code>access/tunnels.env</code>; per-person overrides go in <code>access/tunnels.local.env</code> (git-ignored).</p>
 <table data-width="760"><thead><tr><th><p>Local port</p></th><th><p>Target</p></th><th><p>Schemas</p></th><th><p>Credentials (name of the secret)</p></th></tr></thead><tbody>
 <tr><td><p>3375</p></td><td><p>Aurora MySQL cluster <code>benefit-sit</code></p></td><td><p><code>Aspire</code> = SIT, <code>AspireProdBackup</code> = UAT</p></td><td><p><code>benefit-connection-string-preprod</code> → <code>connectionStringBenefitUat</code></p></td></tr>
 <tr><td><p>3382</p></td><td><p>Aurora MySQL <code>benefit-prod</code> — SELECT only</p></td><td><p><code>Aspire</code></p></td><td><p>same secret → <code>connectionStringBenefitProduction</code></p></td></tr>
 <tr><td><p>3383</p></td><td><p>MSSQL <code>rsa-prod</code></p></td><td><p><code>BKKRsa</code></p></td><td><p><code>roadside-connection-string</code></p></td></tr>
 </tbody></table>
-<pre><code class="language-bash"># shape of the command (host/key from infra):
-ssh -N -i ~/.ssh/&lt;key&gt; -L 3375:benefit-sit.cluster-&lt;id&gt;.ap-southeast-1.rds.amazonaws.com:3306 &lt;user&gt;@&lt;bastion&gt;</code></pre>
+<p>What the script runs, if you prefer it by hand: <code>ssh -N -i ~/.ssh/ABE.pem -L 3375:benefit-sit-instance-1.cofpzhamf3ov.ap-southeast-1.rds.amazonaws.com:3306 ec2-user@ec2-13-250-112-53.ap-southeast-1.compute.amazonaws.com</code> (same for 3382 → <code>benefit-prod-instance-1…:3306</code>, 3383 → <code>rsa-prod…:1433</code>).</p>
 <p>Never write a password into a file, a prompt or a chat: the agent reads the secret with <code>aws secretsmanager get-secret-value</code> into memory and connects from there.</p>
 
 <h2>8. Verify</h2>
@@ -84,7 +87,8 @@ ssh -N -i ~/.ssh/&lt;key&gt; -L 3375:benefit-sit.cluster-&lt;id&gt;.ap-southeast
 <tr><td><p>MCP not registered</p></td><td><p><code>bash ai-workspace/claude/mcp.sh</code>, then <code>/mcp</code> inside claude to authenticate</p></td></tr>
 <tr><td><p>AWS account</p></td><td><p>wrong profile — <code>export AWS_PROFILE=…</code> or <code>aws sso login</code></p></td></tr>
 <tr><td><p>secret not readable</p></td><td><p>IAM permission missing — ask infra for read on <code>benefit-connection-string-preprod</code> and <code>roadside-connection-string</code></p></td></tr>
-<tr><td><p>tunnel not listening</p></td><td><p>§6 — open it; <code>lsof -nP -iTCP:3375 -sTCP:LISTEN</code> shows it</p></td></tr>
+<tr><td><p>tunnel not listening</p></td><td><p>§7 — <code>access/tunnel.sh status</code> / <code>tunnel.ps1 status</code>; by hand <code>lsof -nP -iTCP:3375 -sTCP:LISTEN</code> (macOS) or <code>Get-NetTCPConnection -LocalPort 3375 -State Listen</code> (Windows). Drops at once → your IP is not in the bastion SG</p></td></tr>
+<tr><td><p>ssh: UNPROTECTED PRIVATE KEY FILE (Windows)</p></td><td><p>the key is readable by other accounts — <code>tunnel.ps1 up</code> fixes the ACL; by hand <code>icacls ~\.ssh\ABE.pem /inheritance:r /grant:r "$env:USERNAME:R"</code></p></td></tr>
 <tr><td><p>twg not authenticated</p></td><td><p>run any twg read command and complete the OAuth page</p></td></tr>
 </tbody></table>
 
